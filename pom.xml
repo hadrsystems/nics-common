@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Maven artifact details -->
+	<groupId>edu.mit.ll.nics.common</groupId>
+	<artifactId>master-pom</artifactId>
+	<version>6.1</version>
+	<packaging>pom</packaging>
+
+	<!-- Project information -->
+	<name>Next-Generation Incident Command System (NICS)</name>
+	<description>The master pom for all NICS modules</description>
+	<organization>
+		<name>MIT Lincoln Laboratory</name>
+		<url>http://www.ll.mit.edu</url>
+	</organization>
+	<inceptionYear>2009</inceptionYear>
+
+	<!-- Listing all the sub-components of the NICS codebase -->
+	<modules>
+		<module>dao</module>
+		<module>encryption-lib</module>
+		<module>entities</module>
+		<module>geoserver-rest-api</module>
+		<module>hash-lib</module>
+		<module>message-parser</module>
+		<module>messages</module>
+		<module>rabbitmq-admin-interface</module>
+		<module>rabbitmq-client</module>
+		<module>web-service-request</module>
+		<module>nics-constants</module>
+		<module>nics-dao</module>
+	</modules>
+
+	<!-- Properties for use in the master NICS pom and the poms of any submodules. These 
+		are used to specify things like dependency and plugin versions, configuration values 
+		that should be quickly configurable, etc. -->
+	<properties>
+		<!-- External dependency versions -->
+		<camel.version>2.9.0</camel.version>
+		<commons-cli.version>1.2</commons-cli.version>
+		<commons-codec.version>1.5</commons-codec.version>
+		<commons-io.version>1.3.1</commons-io.version>
+		<commons-management.version>1.0</commons-management.version>
+		<esapi.version>2.1.0</esapi.version>
+        	<hsqldb.version>2.3.0</hsqldb.version>
+        	<hibernate-core.version>4.1.6.Final</hibernate-core.version>
+		<hibernate-spatial.version>4.0</hibernate-spatial.version>
+		<jinterface.version>1.5.3.2</jinterface.version>
+		<json.version>20090211</json.version>
+		<jts.version>1.11</jts.version>
+		<junit.version>4.10</junit.version>
+		<log4j.version>1.2.17</log4j.version>
+		<nc_utils-version>0.0.1</nc_utils-version>
+		<postgis-jdbc.version>1.5.2</postgis-jdbc.version>
+		<rabbitmq.version>3.2.1</rabbitmq.version>
+		<slf4j.version>1.7.1</slf4j.version>
+		<testng.version>6.8</testng.version>
+		<xml-apis.version>1.4.01</xml-apis.version>
+		<spring.version>4.1.4.RELEASE</spring.version>
+		<commons-logging.version>1.1.1</commons-logging.version>
+		<joda-time.version>1.6.2</joda-time.version>
+    		<jackson.version>2.0.0</jackson.version>
+
+		<!-- MITLL dependency versions -->
+		<ll.vusa.version>5.7</ll.vusa.version>
+		<camel.component>2.9.0-RELEASE</camel.component>
+
+		<!-- External plugin versions -->
+		<assembly.plugin.version>2.3</assembly.plugin.version>
+		<compiler.plugin.version>2.5.1</compiler.plugin.version>
+		<dependency.plugin.version>2.5.1</dependency.plugin.version>
+		<ear.plugin.version>2.6</ear.plugin.version>
+		<exec.plugin.version>1.2</exec.plugin.version>
+		<git.scm.provider.version>1.7</git.scm.provider.version>
+		<jstd.plugin.version>1.3.2.5</jstd.plugin.version>
+		<license.plugin.version>1.9.0</license.plugin.version>
+		<m2e-lifecycle.plugin.version>1.0.0</m2e-lifecycle.plugin.version>
+		<plexus.plugin.version>1.3.8</plexus.plugin.version>
+		<scm.api.version>1.7</scm.api.version>
+		<shade.plugin.version>1.6</shade.plugin.version>
+		<surefire.plugin.version>2.12.4</surefire.plugin.version>
+		<versions.plugin.version>1.3.1</versions.plugin.version>
+		<war.plugin.version>2.1.1</war.plugin.version>
+
+		<!-- Build parameters -->
+		<java.compiler.version>1.6</java.compiler.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+	</properties>
+
+	<!-- Project-wide dependency management. Manages versions, excludes, scopes, etc 
+		for all dependencies in NICS. NOTE: All dependency details should be defined here. 
+		Versions of external dependencies should be specified as properties above and then 
+		referenced in here. The full dependency definition should be specified in this section 
+		(submodules can override a definition if need be, though that is discouraged). When 
+		including a dependency in a submodule all that is needed is the 'groupId' and 'artifactId'; 
+		all other information should be inherited from this section. -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+		           <groupId>org.springframework</groupId>
+		           <artifactId>spring-jdbc</artifactId>
+		           <version>${spring.version}</version>
+		       </dependency>
+			<dependency>
+		           <groupId>org.springframework</groupId>
+		           <artifactId>spring-context</artifactId>
+		           <version>${spring.version}</version>
+		       </dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+		               <groupId>org.hsqldb</groupId>
+		               <artifactId>hsqldb</artifactId>
+		               <version>${hsqldb.version}</version>
+		               <scope>test</scope>
+		       </dependency>
+			<dependency>
+			   <groupId>org.springframework</groupId>
+			   <artifactId>spring-test</artifactId>
+			   <version>${spring.version}</version>
+			   <scope>test</scope>          
+		       </dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>xml-email</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>nics-constants</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			 <dependency>
+			       <groupId>org.hibernate</groupId>
+			       <artifactId>hibernate-core</artifactId>
+			       <version>${hibernate-core.version}</version>
+			       <exclusions>
+				    <exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				    </exclusion>
+			      </exclusions>
+			   </dependency>
+			<dependency>
+			    <groupId>org.hibernate</groupId>
+			    <artifactId>hibernate-spatial</artifactId>
+			    <version>${hibernate-spatial.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.json</groupId>
+				<artifactId>json</artifactId>
+				<version>${json.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.postgis</groupId>
+				<artifactId>postgis-jdbc</artifactId>
+				<version>${postgis-jdbc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.owasp.esapi</groupId>
+				<artifactId>esapi</artifactId>
+				<version>${esapi.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.vividsolutions</groupId>
+				<artifactId>jts</artifactId>
+				<version>${jts.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>${commons-codec.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>messages</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>entities</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.erlang.otp</groupId>
+				<artifactId>jinterface</artifactId>
+				<version>${jinterface.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.rabbitmq</groupId>
+				<artifactId>amqp-client</artifactId>
+				<version>${rabbitmq.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.testng</groupId>
+				<artifactId>testng</artifactId>
+				<version>${testng.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-cli</groupId>
+				<artifactId>commons-cli</artifactId>
+				<version>${commons-cli.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-logging</groupId>
+				<artifactId>commons-logging</artifactId>
+				<version>${commons-logging.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-core</artifactId>
+				<version>${camel.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.fusesource.commonman</groupId>
+				<artifactId>commons-management</artifactId>
+				<version>${commons-management.version}</version>
+			</dependency>
+			<dependency>
+			   <groupId>edu.mit.ll.ncutils</groupId>
+			   <artifactId>nc_utils_test</artifactId>
+			   <version>${nc_utils-version}</version>
+			</dependency>
+			<dependency>
+	  			<groupId>edu.mit.ll.nct.dts</groupId>
+	  			<artifactId>CamelComponentFixtures</artifactId>
+	  			<version>${camel.component}</version>
+	  	    	</dependency>
+			<dependency>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-stream</artifactId>
+				<version>${camel.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-xmpp</artifactId>
+				<version>${camel.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-simple</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>message-parser</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>dao-lib</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>joda-time</groupId>
+				<artifactId>joda-time</artifactId>
+				<version>${joda-time.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>edu.mit.ll.nics.common</groupId>
+				<artifactId>RabbitMQCamelComponent</artifactId>
+				<version>${project.version}</version>
+				<exclusions>
+					<!-- We don't need to be pulling this is since we have the log4j
+						dependency already in our poms -->
+					<exclusion>
+						<groupId>org.apache.log4j</groupId>
+						<artifactId>com.springsource.org.apache.log4j</artifactId>
+					</exclusion>
+        			</exclusions>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+
+	<!-- Build settings -->
+	<build>
+		<!-- Manages versions and configuration of plugins for all child poms -->
+		<pluginManagement>
+			<plugins>
+				<!-- External plugins -->
+				<plugin>
+					<!-- Plugin for running Javascript unit tests with Google's JsTestDriver. -->
+					<groupId>com.googlecode.jstd-maven-plugin</groupId>
+					<artifactId>jstd-maven-plugin</artifactId>
+					<version>${jstd.plugin.version}</version>
+					<configuration>
+						<testOutput>${project.build.directory}/js-test-reports</testOutput>
+					</configuration>
+					<executions>
+						<execution>
+							<id>run-tests</id>
+							<goals>
+								<goal>test</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<!-- This plugin formats source files by checking and adding 
+						a copyright header if it's missing. -->
+					<groupId>com.mycila.maven-license-plugin</groupId>
+					<artifactId>maven-license-plugin</artifactId>
+					<version>${license.plugin.version}</version>
+					<configuration>
+						<aggregate>true</aggregate>
+						<header>${basedir}/copyright.txt</header>
+						<strictCheck>true</strictCheck>
+						<properties>
+							<year>2015</year>
+						</properties>
+						<useDefaultExcludes>false</useDefaultExcludes>
+						
+						<!-- Additional file-to-comment-style mappings -->
+						<mapping>
+							<xslt>XML_STYLE</xslt>
+						</mapping>
+						
+						<excludes>
+							<!-- Some default excludes -->
+							<exclude>**/*~</exclude>
+							<exclude>**/*.jar</exclude>
+							<exclude>**/*.zip</exclude>
+							<exclude>**/*.tar*</exclude>
+							<exclude>**/*.pdf</exclude>
+							<exclude>**/*.jpg</exclude>
+							<exclude>**/*.png</exclude>
+							<exclude>**/*.gif</exclude>
+							<exclude>**/*.ico</exclude>
+							<exclude>**/*.bmp</exclude>
+							<exclude>**/*.tif*</exclude>
+							<exclude>**/*.cr2</exclude>
+							<exclude>**/MANIFEST.MF</exclude>
+							<exclude>**/.classpath</exclude>
+							<exclude>**/.project</exclude>
+							<exclude>**/.settings/**</exclude>
+							<exclude>**/target/**</exclude>
+							<exclude>**/test-output/**</exclude>
+							<exclude>**/META-INF/services/**</exclude>
+							<exclude>**/.git</exclude>
+							<exclude>**/.gitignore</exclude>
+							<exclude>**/.git/**</exclude>
+							<exclude>**/*.log</exclude>
+						</excludes>
+					</configuration>
+					<inherited>false</inherited>
+					<executions>
+						<execution>
+							<id>update-copyright</id>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>format</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>verify-copyright</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<!-- This produces is used to assemble files into an archive of some type. -->
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>${assembly.plugin.version}</version>
+					<dependencies>
+						<dependency>
+							<groupId>edu.mit.ll.nics</groupId>
+							<artifactId>archive-assembly</artifactId>
+							<version>${project.version}</version>
+						</dependency>
+                        <dependency>
+							<groupId>edu.mit.ll.nics</groupId>
+							<artifactId>spring-deploy-assembly</artifactId>
+							<version>${project.version}</version>
+						</dependency>
+					</dependencies>
+					<executions>
+						<execution>
+							<id>make-assembly</id>
+							<phase>package</phase>
+							<goals>
+								<goal>single</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<!-- Maven compiler plugin for specifying java compiler options -->
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${compiler.plugin.version}</version>
+					<configuration>
+						<source>${java.compiler.version}</source>
+						<target>${java.compiler.version}</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>${dependency.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-ear-plugin</artifactId>
+					<version>${ear.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>${shade.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>${surefire.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>${war.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>${exec.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<!-- This plugin is used update the version numbers of the project
+						during the release process. -->
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>versions-maven-plugin</artifactId>
+					<version>${versions.plugin.version}</version>
+					<configuration>
+						<generateBackupPoms>false</generateBackupPoms>
+					</configuration>
+				</plugin>
+				<plugin>
+                    <groupId>org.codehaus.plexus</groupId>
+                    <artifactId>plexus-maven-plugin</artifactId>
+                    <version>${plexus.plugin.version}</version>
+                </plugin>
+
+				<!-- MITLL plugins -->
+				<plugin>
+					<groupId>edu.mit.ll.nics</groupId>
+					<artifactId>javascript-maven-plugin</artifactId>
+					<version>${project.version}</version>
+				</plugin>
+
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It 
+					has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>${m2e-lifecycle.plugin.version}</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-dependency-plugin
+										</artifactId>
+										<versionRange>[2.1,)</versionRange>
+										<goals>
+											<goal>copy-dependencies</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-ear-plugin
+										</artifactId>
+										<versionRange>[2.6,)</versionRange>
+										<goals>
+											<goal>
+												generate-application-xml
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											edu.mit.ll.nics
+										</groupId>
+										<artifactId>
+											javascript-maven-plugin
+										</artifactId>
+										<versionRange>[1.1,)</versionRange>
+										<goals>
+											<goal>compile</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.codehaus.mojo</groupId>
+										<artifactId>
+											buildnumber-maven-plugin
+										</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>create-timestamp</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<!-- Configure project-wide plugins -->
+		<plugins>
+			<plugin>
+				<!-- We want to apply license plugin at the top level of 
+					the project so it is applied to all projects -->
+				<groupId>com.mycila.maven-license-plugin</groupId>
+				<artifactId>maven-license-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<!-- Use the maven-compiler-plugin across the whole project -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<!-- Generate the buildnumber in every module -->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+
+	<repositories>
+		<repository>
+			<id>hibernate-spatial</id>
+			<name>Hibernate Spatial</name>
+			<url>http://www.hibernatespatial.org/repository</url>
+		</repository>
+	</repositories>
+</project>
+
+

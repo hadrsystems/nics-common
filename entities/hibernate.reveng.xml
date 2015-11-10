@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+  <table-filter match-catalog="dmit" match-name="annotation" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="avl_data" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="avl_vehicles" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="collabroom" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="collabstate" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="features" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="ict" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="ict_user" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="incident" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="incident_incidenttype" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="incidenttype" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="login" />
+  <table-filter match-catalog="dmit" match-name="options" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="rabbituser" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="role" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="seq" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="uploaded" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="user" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="userrole" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="usersession" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="wbarchive" exclude="true"/>
+  <table-filter match-catalog="dmit" match-name="wmslayer" exclude="true"/>
+</hibernate-reverse-engineering>
