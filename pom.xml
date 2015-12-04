@@ -52,6 +52,7 @@
 
 	<!-- Listing all the sub-components of the NICS codebase -->
 	<modules>
+		<module>email-alert</module>
 		<module>dao</module>
 		<module>encryption-lib</module>
 		<module>entities</module>
@@ -62,6 +63,7 @@
 		<module>rabbitmq-admin-interface</module>
 		<module>rabbitmq-client</module>
 		<module>web-service-request</module>
+		<module>xml-email</module>
 		<module>nics-constants</module>
 		<module>nics-dao</module>
 	</modules>
@@ -71,7 +73,7 @@
 		that should be quickly configurable, etc. -->
 	<properties>
 		<!-- External dependency versions -->
-		<camel.version>2.9.0</camel.version>
+		<camel.version>2.14.3</camel.version>
 		<commons-cli.version>1.2</commons-cli.version>
 		<commons-codec.version>1.5</commons-codec.version>
 		<commons-io.version>1.3.1</commons-io.version>
@@ -98,7 +100,6 @@
 
 		<!-- MITLL dependency versions -->
 		<ll.vusa.version>5.7</ll.vusa.version>
-		<camel.component>2.9.0-RELEASE</camel.component>
 
 		<!-- External plugin versions -->
 		<assembly.plugin.version>2.3</assembly.plugin.version>
@@ -278,23 +279,8 @@
 				<version>${commons-management.version}</version>
 			</dependency>
 			<dependency>
-			   <groupId>edu.mit.ll.ncutils</groupId>
-			   <artifactId>nc_utils_test</artifactId>
-			   <version>${nc_utils-version}</version>
-			</dependency>
-			<dependency>
-	  			<groupId>edu.mit.ll.nct.dts</groupId>
-	  			<artifactId>CamelComponentFixtures</artifactId>
-	  			<version>${camel.component}</version>
-	  	    	</dependency>
-			<dependency>
 				<groupId>org.apache.camel</groupId>
 				<artifactId>camel-stream</artifactId>
-				<version>${camel.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.camel</groupId>
-				<artifactId>camel-xmpp</artifactId>
 				<version>${camel.version}</version>
 			</dependency>
 			<dependency>

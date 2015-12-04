@@ -1,0 +1,86 @@
+<!--
+
+    Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its contributors
+    may be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+           xmlns:xmime="http://www.w3.org/2005/05/xmlmime"
+           xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="2.0">
+
+
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+        Email Schema for Email Sender
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="emailMessage" type="EmailType"/>
+
+    <xsd:complexType name="EmailType">
+        <xsd:sequence>
+            <xsd:element name="header" type="HeaderType" maxOccurs="1"/>
+            <xsd:element name="content" type="ContentType" maxOccurs="1"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="HeaderType">
+        <xsd:sequence>
+            <xsd:element name="To"   type="xsd:string"/>
+            <xsd:element name="From" type="xsd:string" maxOccurs="1"/>
+            <xsd:element name="Cc"   type="xsd:string"/>
+            <xsd:element name="Bcc"  type="xsd:string"/>
+            <xsd:element name="Subject"   type="xsd:string" maxOccurs="1"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="ContentType">
+        <xsd:sequence>
+            <xsd:element name="body" type="BodyType" maxOccurs="1"/>
+            <xsd:element name="image" type="ImageType" maxOccurs="1"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="BodyType">
+        <xsd:sequence>
+            <xsd:element name="format" type="xsd:string" default="ascii"/>
+            <xsd:element name="text" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="ImageType">
+        <xsd:sequence>
+            <xsd:element name="location" type="xsd:string" default="embed"/>
+            <xsd:element name="JPEGPicture" type="xsd:base64Binary" xmime:expectedContentTypes="image/jpeg"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+</xsd:schema>
+    
+
