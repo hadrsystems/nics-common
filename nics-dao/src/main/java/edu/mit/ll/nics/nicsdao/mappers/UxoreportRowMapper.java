@@ -27,32 +27,41 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.mit.ll.nics.nicsdao;
+package edu.mit.ll.nics.nicsdao.mappers;
 
-import java.util.List;
+import edu.mit.ll.jdbc.JoinRowMapper;
+import edu.mit.ll.nics.common.constants.SADisplayConstants;
+import edu.mit.ll.nics.common.entity.Uxoreport;
+import org.postgis.PGgeometry;
 
-import edu.mit.ll.nics.common.entity.datalayer.Datalayer;
-import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
-import edu.mit.ll.nics.common.entity.datalayer.Datasource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-public interface DatalayerDAO extends BaseDAO {
-	public List<Datalayerfolder> getDatalayerFolders(String folderid);
-	public List<Datasource> getDatasources(String type);
-	public Datalayer reloadDatalayer(String datalayerid);
-	public int getDatasourceTypeId(String datasourcetype);
-	public String getDatasourceId(String internalurl);
-	public String getDatalayersourceId(String layername);
-	public String getUnofficialDatalayerId(String collabroom, String folderid);
-	public List<String> getAvailableStyles();
-	public Datalayerfolder getDatalayerfolder(String datalayerid, String folderid);
-	public Datalayerfolder getDatalayerfolder(int datalayerfolderId);
-	public int getNextDatalayerFolderId();
-	public String insertDataSource(Datasource source);
-	public String insertDataLayer(String dataSourceId, Datalayer datalayer);
-	public int insertDataLayerFolder(String folderId, String datalayerId, int folderIndex);
-	public Datasource getDatasource(String datasourceId);
-	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder);
-	public void decrementIndexes(String parentFolderId, int index);
-	public void incrementIndexes(String parentFolderId, int index);
-	public int getNextDatalayerFolderIndex(String folderid);
+/**
+ * Created by cbudny on 1/28/16.
+ */
+public class UxoreportRowMapper extends JoinRowMapper<Uxoreport>
+{
+    public UxoreportRowMapper()
+    {
+        super("uxoreport");
+    }
+
+    @Override
+    public Uxoreport createRowObject(ResultSet rs, int rowNum) throws SQLException {
+        Uxoreport report = new Uxoreport();
+
+        report.setUxoreportid(rs.getLong("uxoreportid"));
+        report.setIncidentid(rs.getInt("incidentid"));
+        report.setMessage(rs.getString("message"));
+        report.setLat(rs.getDouble("lat"));
+        report.setLon(rs.getDouble("lon"));
+
+        return report;
+    }
+
+    @Override
+    public Object getKey(ResultSet rs) throws SQLException {
+        return rs.getString(SADisplayConstants.UXOREPORTID);
+    }
 }

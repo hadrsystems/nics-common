@@ -31,9 +31,11 @@ package edu.mit.ll.nics.common.entity;
 
 // Generated Oct 7, 2011 8:20:22 AM by Hibernate Tools 3.4.0.CR1
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Level;
@@ -53,11 +55,15 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.Type;
 
 import com.vividsolutions.jts.geom.Polygon;
+
+
+
 
 
 
@@ -95,7 +101,12 @@ public class Incident extends SADisplayMessageEntity implements SADisplayPersist
     private Integer workspaceid;
     private Set<CollabRoom> collabrooms = new HashSet<CollabRoom>(0);
     private Set<IncidentIncidentType> incidentIncidenttypes = new HashSet<IncidentIncidentType>(0);
-
+    
+    //	Used in nics-web to display tree structure for multi-incident-view
+    @Transient
+    private List<Incident> children = null;
+    private Boolean leaf = true;
+    
     public Incident() {
     }
 
@@ -290,6 +301,40 @@ public class Incident extends SADisplayMessageEntity implements SADisplayPersist
     public void setWorkspaceid(Integer id) {
         this.workspaceid = id;
     }
+    
+    /**
+	* @return the incident children
+	*/
+    @Transient
+	public List<Incident> getChildren() {
+		return this.children;
+	}
+	
+	/**
+	* @param children incident
+	*/
+    @Transient
+	public void setChildren(List<Incident> children) {
+		if(this.children == null){
+			this.children = new ArrayList<Incident>();
+		}
+		this.children = children;
+	}
+	
+   /**
+	* @return leaf boolean value
+	*/
+	public Boolean getLeaf() {
+		return this.leaf;
+	}
+	
+	/**
+	* @param leaf boolean value
+	*/
+	public void setLeaf(Boolean leaf) {
+		this.leaf = leaf;
+	}
+    
 
     @Override
     public JSONObject toJSONObject() {
@@ -298,6 +343,7 @@ public class Incident extends SADisplayMessageEntity implements SADisplayPersist
 
         JSONObject json = new JSONObject();
         JSONArray jarr = new JSONArray();
+        JSONArray jarr2 = new JSONArray();
         try {
             json.put("usersessionid", this.usersessionid);
             json.put("incidentname", this.incidentname);
@@ -321,6 +367,22 @@ public class Incident extends SADisplayMessageEntity implements SADisplayPersist
             }
             // put array in json object
             json.put("incidenttypes", jarr);
+            if(!this.children.isEmpty()){
+            
+	            Iterator<Incident> j = this.children.iterator();
+	            while (j.hasNext())
+				{	// put in json array
+	            	Incident it = j.next();
+	            	jarr2.put(it.toJSONObject());
+				}
+				// put array in json object
+				json.put("children", jarr2);
+				json.put("leaf",false);
+            }
+            else{
+            	json.put("chilren","null");
+            	json.put("leaf",true);
+            }
             
         } catch (JSONException ex) {
             Logger.getLogger(Incident.class.getName()).log(Level.SEVERE, null, ex);

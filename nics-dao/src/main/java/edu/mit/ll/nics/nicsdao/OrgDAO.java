@@ -39,10 +39,11 @@ public interface OrgDAO extends BaseDAO {
 	public List<String> getOrgFolderIds(int orgid);
     public List<String> getOrgAdmins(int orgid);
     public List<Org> getUserOrgs(int userid, int workspaceId);
+    public List<Org> getAdminOrgs(int userid, int workspaceId);
     public List<Org> getUserOrgsByUsername(String username, int workspaceId);
     public List<String> getOrgNames();
     public List<Org> getOrgsByType(int orgtypeid);
-    public void removeOrgOrgType(int orgId, int orgTypeId);
+    public int removeOrgOrgType(int orgId, int orgTypeId);
     public List<Org> getOrganizations();
     public List<OrgType> getOrgTypes();
     public Org getOrganization(String name);

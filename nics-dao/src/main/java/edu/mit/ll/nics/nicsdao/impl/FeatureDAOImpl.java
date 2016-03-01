@@ -91,7 +91,14 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
     	
     	if(dateRange != null && dateRange.colName != null && dateRange.from != null){
     		query.and().greaterThanOrEquals(dateRange.colName, new Timestamp(dateRange.from));
-    		map.addValue(dateRange.colName, new Timestamp(dateRange.from));
+    		
+    		if(dateRange.colName.equals("seqtime")){
+    			map.addValue(dateRange.colName, dateRange.from);
+    		}
+    		else{
+    			map.addValue(dateRange.colName, new Timestamp(dateRange.from));
+    		}
+    		
     	}
     	
     	JoinRowCallbackHandler<Feature> handler = getHandlerWith(new DocumentRowMapper());
@@ -114,7 +121,13 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
      	
      	if(dateRange != null && dateRange.colName != null && dateRange.from != null){
      		query.and().greaterThanOrEquals(dateRange.colName, new Timestamp(dateRange.from));
-     		map.addValue(dateRange.colName, new Timestamp(dateRange.from));
+     		
+     		if(dateRange.colName.equals("seqtime")){
+    			map.addValue(dateRange.colName, dateRange.from);
+    		}
+    		else{
+    			map.addValue(dateRange.colName, new Timestamp(dateRange.from));
+    		}
      	}
      	
      	System.out.println("Query: " + query.toString());
@@ -122,17 +135,19 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
      	return this.template.queryForList(query.toString(), map, Long.class);
      }
     
-    public long addFeature(JSONObject feature, List<String> fields) throws Exception{
+    public long addFeature(JSONObject feature, List<String> fields, int geoType) throws Exception{
     	try {
+    		
+    		boolean transform = geoType != QueryBuilder.SRS_PROJECTION;
     		
     		//Update the feature
     		if(!fields.contains(SADisplayConstants.LAST_UPDATE)){
     			fields.add(SADisplayConstants.LAST_UPDATE);
     			feature.put(SADisplayConstants.LAST_UPDATE, new Date());
     		}
-    		
+    	
     		QueryModel query = QueryManager.createQuery(SADisplayConstants.FEATURE)
-    				.insertInto(fields, SADisplayConstants.FEATURE_ID).returnValue(SADisplayConstants.FEATURE_ID);
+    				.insertIntoFeatureWithGeo(fields, transform, SADisplayConstants.FEATURE_ID).returnValue(SADisplayConstants.FEATURE_ID);
     		
     		MapSqlParameterSource valueMap = new MapSqlParameterSource();
     		
@@ -143,6 +158,10 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
     		
     		//Has a geometry field so need to specify the SRS
     		valueMap.addValue(QueryBuilder.SRS, QueryBuilder.SRS_PROJECTION);
+    		if(transform){
+    			valueMap.addValue(QueryBuilder.TRANS, geoType);
+    		}
+    		
     		
     		return this.template.queryForObject(query.toString(), valueMap, Long.class);
     	} catch(Exception e) {
@@ -282,7 +301,8 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
     		.where().equals(SADisplayConstants.FEATURE_ID, featureId);
     	
     	QueryModel dateUpdate = QueryManager.createQuery(SADisplayConstants.FEATURE)
-        		.update().equals(SADisplayConstants.LAST_UPDATE, new Date())
+        		.update().equals(SADisplayConstants.LAST_UPDATE, new Date()).comma()
+        		.equals(SADisplayConstants.SEQ_TIME, (System.currentTimeMillis()/1000) )
         		.where().equals(SADisplayConstants.FEATURE_ID, featureId);
     	
     	template.update(dateUpdate.toString(), dateUpdate.getParameters());
@@ -294,6 +314,13 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
     	QueryModel model = QueryManager.createQuery(SADisplayConstants.USER_FEATURE)
     		.update().equals(SADisplayConstants.DELETED, deleted)
     		.where().equals(SADisplayConstants.FEATURE_ID, featureId);
+    	
+    	QueryModel dateUpdate = QueryManager.createQuery(SADisplayConstants.FEATURE)
+        		.update().equals(SADisplayConstants.LAST_UPDATE, new Date()).comma()
+        		.equals(SADisplayConstants.SEQ_TIME, (System.currentTimeMillis()/1000) )
+        		.where().equals(SADisplayConstants.FEATURE_ID, featureId);
+    	
+    	template.update(dateUpdate.toString(), dateUpdate.getParameters());
     	
     	return template.update(model.toString(), model.getParameters());
     }

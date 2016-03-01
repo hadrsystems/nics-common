@@ -29,30 +29,21 @@
  */
 package edu.mit.ll.nics.nicsdao;
 
+import edu.mit.ll.nics.common.entity.Uxoreport;
+
 import java.util.List;
 
-import edu.mit.ll.nics.common.entity.datalayer.Datalayer;
-import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
-import edu.mit.ll.nics.common.entity.datalayer.Datasource;
+/**
+ * Created by cbudny on 1/27/16.
+ */
+public interface UxoreportDAO extends BaseDAO
+{
+    Uxoreport persistUxoreport(Uxoreport report) throws Exception;
 
-public interface DatalayerDAO extends BaseDAO {
-	public List<Datalayerfolder> getDatalayerFolders(String folderid);
-	public List<Datasource> getDatasources(String type);
-	public Datalayer reloadDatalayer(String datalayerid);
-	public int getDatasourceTypeId(String datasourcetype);
-	public String getDatasourceId(String internalurl);
-	public String getDatalayersourceId(String layername);
-	public String getUnofficialDatalayerId(String collabroom, String folderid);
-	public List<String> getAvailableStyles();
-	public Datalayerfolder getDatalayerfolder(String datalayerid, String folderid);
-	public Datalayerfolder getDatalayerfolder(int datalayerfolderId);
-	public int getNextDatalayerFolderId();
-	public String insertDataSource(Datasource source);
-	public String insertDataLayer(String dataSourceId, Datalayer datalayer);
-	public int insertDataLayerFolder(String folderId, String datalayerId, int folderIndex);
-	public Datasource getDatasource(String datasourceId);
-	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder);
-	public void decrementIndexes(String parentFolderId, int index);
-	public void incrementIndexes(String parentFolderId, int index);
-	public int getNextDatalayerFolderIndex(String folderid);
+    Uxoreport getUxoreport(long uxoreportid);
+
+    List<Uxoreport> getUxoreports(int incidentid);
+
+    long updateUxoreportMessage(Uxoreport report) throws Exception;
+
 }

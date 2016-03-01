@@ -68,7 +68,7 @@ Feature feature = new Feature();
     	feature.setGeometry(geometryString);
         feature.setFeatureId(rs.getLong("featureid"));
         feature.setDashStyle(rs.getString("dashstyle"));
-        //feature.setFeatureattributes(rs.getString("attributes"));
+        feature.setAttributes(rs.getString("attributes"));
         feature.setFillColor(rs.getString("fillcolor"));
         feature.setGraphic(rs.getString("graphic"));
         feature.setGraphicHeight(rs.getDouble("graphicheight"));

@@ -57,4 +57,5 @@ public interface IncidentDAO extends BaseDAO {
     public List<String> getChildIncidentNames(List<String> incidentNames, int workspaceid);
     public List<String> getParentIncidentNames(List<String> incidentNames, int workspaceid);
     public List<Incident> getIncidentsByName(List<String> names, int workspaceid);
+    public Incident updateIncident(int workspaceId, Incident incident);
 }

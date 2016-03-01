@@ -52,6 +52,8 @@ public class OrgRowMapper extends JoinRowMapper<Org> {
         org.setDistribution(rs.getString((SADisplayConstants.DISTRIBUTION)));
         org.setPrefix(rs.getString(SADisplayConstants.PREFIX));
         org.setState(rs.getString((SADisplayConstants.STATE)));
+        org.setCounty(rs.getString(SADisplayConstants.COUNTY));
+        org.setCountry(rs.getString(SADisplayConstants.COUNTRY));
         return org;
     }
     

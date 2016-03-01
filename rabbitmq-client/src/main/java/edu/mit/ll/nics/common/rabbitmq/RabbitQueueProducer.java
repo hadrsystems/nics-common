@@ -27,32 +27,36 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.mit.ll.nics.nicsdao;
+package edu.mit.ll.nics.common.rabbitmq;
 
-import java.util.List;
+import java.io.IOException;
 
-import edu.mit.ll.nics.common.entity.datalayer.Datalayer;
-import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
-import edu.mit.ll.nics.common.entity.datalayer.Datasource;
+public class RabbitQueueProducer extends RabbitClient {
 
-public interface DatalayerDAO extends BaseDAO {
-	public List<Datalayerfolder> getDatalayerFolders(String folderid);
-	public List<Datasource> getDatasources(String type);
-	public Datalayer reloadDatalayer(String datalayerid);
-	public int getDatasourceTypeId(String datasourcetype);
-	public String getDatasourceId(String internalurl);
-	public String getDatalayersourceId(String layername);
-	public String getUnofficialDatalayerId(String collabroom, String folderid);
-	public List<String> getAvailableStyles();
-	public Datalayerfolder getDatalayerfolder(String datalayerid, String folderid);
-	public Datalayerfolder getDatalayerfolder(int datalayerfolderId);
-	public int getNextDatalayerFolderId();
-	public String insertDataSource(Datasource source);
-	public String insertDataLayer(String dataSourceId, Datalayer datalayer);
-	public int insertDataLayerFolder(String folderId, String datalayerId, int folderIndex);
-	public Datasource getDatasource(String datasourceId);
-	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder);
-	public void decrementIndexes(String parentFolderId, int index);
-	public void incrementIndexes(String parentFolderId, int index);
-	public int getNextDatalayerFolderIndex(String folderid);
+	private String queueName;
+
+	public RabbitQueueProducer(String hostname, String queueName) throws IOException {
+		super(hostname);
+		initialize(hostname, queueName);
+	}
+	
+	public RabbitQueueProducer(String hostname, String queueName,
+			String rabbitUsername, String rabbitUserpwd) throws IOException {
+		super(hostname, rabbitUsername, rabbitUserpwd);
+		initialize(hostname, queueName);
+	}	
+	
+	private void initialize(String hostname, String queueName) throws IOException {
+		declareQueue(queueName);
+		this.queueName = queueName;
+	}
+
+	public void produce(String message) throws IOException {
+	    getChannel().basicPublish("", queueName, null, message.getBytes());
+	    System.out.println(" [x] Sent '" + message + "'");	
+	}
+	
+	public void destroy() {
+		super.destroy();
+	}		
 }

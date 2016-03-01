@@ -224,6 +224,13 @@ public class QueryModel{
 		return this;
 	}
 	
+	public QueryModel ilike(String field){
+		query.append(QueryBuilder.SPACE);
+		query.append(field);
+		query.append(QueryBuilder.I_LIKE);
+		return this;
+	}
+	
 	public QueryModel equalsLower(String field){
 		StringBuffer tempQuery = new StringBuffer();
 		tempQuery.append(QueryBuilder.LOWER);
@@ -288,7 +295,12 @@ public class QueryModel{
 		this.buildInsert(fields, primaryKey);
 		this.VALUES(fields, true);
 		return this;
-		
+	}
+	
+	public QueryModel insertIntoFeatureWithGeo(List<String> fields, boolean transform, String primaryKey){
+		this.buildInsert(fields, primaryKey);
+		this.FEATURESVALUES(fields, transform, true);
+		return this;
 	}
 	
 	public QueryModel insertInto(List<String> fields){
@@ -317,6 +329,18 @@ public class QueryModel{
 			query.append(QueryBuilder.COMMA);
 		}
 		query.append(this.buildList(fields, QueryBuilder.COMMA, null));
+		query.append(QueryBuilder.CLOSE);
+		return this;
+	}
+	
+	public QueryModel FEATURESVALUES(List<String> values, boolean transform, boolean hasPrimaryKey){
+		query.append(QueryBuilder.VALUES);
+		query.append(QueryBuilder.OPEN);
+		if(hasPrimaryKey){
+			query.append(QueryBuilder.DEFAULT);
+			query.append(QueryBuilder.COMMA);
+		}
+		query.append(this.buildFeaturesList(values, transform, QueryBuilder.COMMA, QueryBuilder.COLON));
 		query.append(QueryBuilder.CLOSE);
 		return this;
 	}
@@ -370,6 +394,11 @@ public class QueryModel{
 		query.append(this.table);
 		query.append(QueryBuilder.SINGLE_QUOTE);
 		query.append(QueryBuilder.CLOSE);
+		return this;
+	}
+	
+	public QueryModel space(){
+		query.append(QueryBuilder.SPACE);
 		return this;
 	}
 	
@@ -448,6 +477,29 @@ public class QueryModel{
 	public String toString(){
 		//System.out.println("***********************" + query.toString());
 		return query.toString();
+	}	
+	
+	public String buildFeaturesList(List<String> fields, boolean transform, String postDelimiter, String preDelimiter){
+		StringBuffer result = new StringBuffer();
+		//For multiple fields
+		for(String field : fields){
+			if(result.length() != 0){
+				result.append(postDelimiter);
+			}
+			
+			//handle geometry
+			if(preDelimiter!=null){//VALUES list
+				if((field.equalsIgnoreCase(QueryBuilder.GEOMETRY) || field.equalsIgnoreCase(QueryBuilder.BOUNDS)) && !transform ){
+					field = insertGeometry(field);
+				}else if((field.equalsIgnoreCase(QueryBuilder.GEOMETRY) || field.equalsIgnoreCase(QueryBuilder.BOUNDS)) && transform){
+					field = insertGeometryWithGeo(field);
+				}else{
+					result.append(preDelimiter);
+				}
+			}
+			result.append(field);
+		}
+		return result.toString();
 	}
 	
 	public String buildList(List<String> fields, String postDelimiter, String preDelimiter){
@@ -471,6 +523,23 @@ public class QueryModel{
 		return result.toString();
 	}
 	
+	private String insertGeometryWithGeo(String field){
+		StringBuffer result = new StringBuffer();
+		result.append(QueryBuilder.GEO_TRANSFORM_FUNCTION);
+		result.append(QueryBuilder.OPEN);
+		result.append(QueryBuilder.GEOMETRY_FUNCTION);
+	    result.append(QueryBuilder.OPEN);
+	    result.append(QueryBuilder.COLON);
+	    result.append(field);
+	    result.append(QueryBuilder.COMMA);
+	    result.append(QueryBuilder.COLON);
+	    result.append(QueryBuilder.TRANS);
+	    result.append(QueryBuilder.CLOSE);
+	    result.append(QueryBuilder.COMMA);
+	    result.append(QueryBuilder.SRS_PROJECTION);
+	    result.append(QueryBuilder.CLOSE);
+		return result.toString();
+	}
 
 	private String insertGeometry(String field){
 		StringBuffer result = new StringBuffer();

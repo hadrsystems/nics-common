@@ -57,6 +57,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import edu.mit.ll.dao.QueryBuilder;
 import edu.mit.ll.dao.QueryModel;
 import edu.mit.ll.jdbc.JoinRowCallbackHandler;
 import edu.mit.ll.jdbc.JoinRowMapper;
@@ -340,6 +341,92 @@ public class UserDAOImpl extends GenericDAO implements UserDAO {
         }
         return null;
 	}
+	
+    /** getUser
+     * @param username - String
+   	 * @return User
+   	 */
+	public User getUserWithSession(long userId){
+		if(this.template == null) {
+			this.initialize();
+		}
+		QueryModel query = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+				.selectAllFromTable()
+				.join(SADisplayConstants.CURRENT_USERSESSION_TABLE).using(SADisplayConstants.USER_ID)
+				.where().equals(SADisplayConstants.USER_ID, userId);
+			
+		JoinRowCallbackHandler<User> handler = getHandlerWith(new CurrentUserSessionRowMapper());
+		
+		template.query(query.toString(), query.getParameters(), handler);
+		
+		return handler.getSingleResult();
+	}
+	
+	public List<User> findUser(String firstName, String lastName, boolean exact){
+		if(this.template == null) {
+            this.initialize();
+        }
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+				.selectAllFromTable().where();
+		
+		if(exact){
+			queryModel = queryModel.equals(SADisplayConstants.FIRSTNAME).and().equals(SADisplayConstants.LASTNAME);
+		}else{
+			queryModel = queryModel.ilike(SADisplayConstants.FIRSTNAME).value("'%" + firstName + "%'")
+					.and().ilike(SADisplayConstants.LASTNAME).value("'%" + lastName + "%'");
+		}
+		
+		JoinRowCallbackHandler<User> handler = getHandlerWith();
+        
+		this.template.query(queryModel.toString(), 
+            new MapSqlParameterSource(SADisplayConstants.FIRSTNAME, firstName)
+			.addValue(SADisplayConstants.LASTNAME, lastName), 
+            handler);
+        
+        try{
+        	return handler.getResults();
+        }catch(Exception e){
+        	log.info("No user was found with firstName " + firstName);
+        }
+        return null;
+	}
+	
+	public List<User> findUserByLastName(String lastName, boolean exact){
+		return this.findUserByField(SADisplayConstants.LASTNAME, lastName, exact);
+	}
+	
+	public List<User> findUserByFirstName(String firstName, boolean exact){
+		return this.findUserByField(SADisplayConstants.FIRSTNAME, firstName, exact);
+	}
+	
+	private List<User> findUserByField(String field, String value, boolean exact){
+		if(this.template == null) {
+            this.initialize();
+        }
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+				.selectAllFromTable().where();
+		
+		if(exact){
+			queryModel = queryModel.equals(field);
+		}else{
+			queryModel = queryModel.ilike(field).value("'%" + value + "%'");
+		}
+		
+		JoinRowCallbackHandler<User> handler = getHandlerWith();
+        
+		this.template.query(queryModel.toString(), 
+            new MapSqlParameterSource(field, value), 
+            handler);
+        
+        try{
+        	return handler.getResults();
+        }catch(Exception e){
+        	log.info("No user was found with value " + value);
+        }
+        return null;
+	}
 
     /** getUserById
      * @param useId - Long
@@ -602,6 +689,24 @@ public class UserDAOImpl extends GenericDAO implements UserDAO {
 		return handler.getResults();
 	}
     
+   	public List<Map<String, Object>> getUsers(int orgId, int workspaceId) {
+   		StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.USER_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.USER_ID);
+   		
+       	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+   				.selectFromTable(fields.toString())
+   				.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ID)
+       			.join(SADisplayConstants.USER_ORG_WORKSPACE_TABLE).using(SADisplayConstants.USER_ORG_ID)
+   				.where().equals(SADisplayConstants.ORG_ID)
+   				.and().equals(SADisplayConstants.WORKSPACE_ID);
+   		
+   		return template.queryForList(queryModel.toString(), 
+				new MapSqlParameterSource(SADisplayConstants.ORG_ID, orgId)
+				.addValue(SADisplayConstants.WORKSPACE_ID, workspaceId));
+   	}
+    
     public boolean verifyEmailAddress(String username, String email){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.CONTACT_TABLE)
     			.selectFromTable(SADisplayConstants.VALUE)
@@ -705,7 +810,7 @@ public class UserDAOImpl extends GenericDAO implements UserDAO {
 				new MapSqlParameterSource(SADisplayConstants.COLLAB_ROOM_ID, collabroomid)
 				.addValue(SADisplayConstants.SYSTEM_ROLE_ID, roleid), String.class);
 	}
-    
+	
 	public int getContactTypeId(String name){
 		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.CONTACT_TYPE_TABLE)
 				.selectFromTableWhere(SADisplayConstants.CONTACT_TYPE_ID)
@@ -899,6 +1004,40 @@ public class UserDAOImpl extends GenericDAO implements UserDAO {
 		//e.printStackTrace();
 		txManager.rollback(txStatus);
 	}
+		
+		
+		return status;
+	}
+	
+	public boolean addUserToOrg(long userId, List<UserOrg> userOrgs, 
+			List<UserOrgWorkspace> userOrgWorkspaces) {
+		boolean status = false;
+		TransactionDefinition txDef = new DefaultTransactionDefinition();
+    	TransactionStatus txStatus = txManager.getTransaction(txDef);
+		
+		try {
+			// Create UserOrgs
+			if(userOrgs != null && userOrgs.size() > 0) {
+				for(UserOrg userOrg : userOrgs) {
+					createUserOrg(userId, userOrg);
+				}
+			}
+			
+			// Create UserOrgWorkspaces
+			if(userOrgWorkspaces != null && userOrgWorkspaces.size() > 0) {
+				for(UserOrgWorkspace userOrgWorkspace : userOrgWorkspaces) {
+					createUserOrgWorkspace(userOrgWorkspace);
+				}
+			}
+			
+			txManager.commit(txStatus);
+			status = true;
+		} catch (Exception e) {
+			log.error("Exception during process of persisting User, rolling back");
+			System.out.println("Exception during process of persisting User, rolling back: " + e.getMessage());
+			//e.printStackTrace();
+			txManager.rollback(txStatus);
+		}
 		
 		
 		return status;

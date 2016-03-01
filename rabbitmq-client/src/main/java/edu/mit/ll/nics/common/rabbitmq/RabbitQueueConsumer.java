@@ -27,32 +27,47 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.mit.ll.nics.nicsdao;
+package edu.mit.ll.nics.common.rabbitmq;
 
-import java.util.List;
+import java.io.IOException;
 
-import edu.mit.ll.nics.common.entity.datalayer.Datalayer;
-import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
-import edu.mit.ll.nics.common.entity.datalayer.Datasource;
+import com.rabbitmq.client.ConsumerCancelledException;
+import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.ShutdownSignalException;
 
-public interface DatalayerDAO extends BaseDAO {
-	public List<Datalayerfolder> getDatalayerFolders(String folderid);
-	public List<Datasource> getDatasources(String type);
-	public Datalayer reloadDatalayer(String datalayerid);
-	public int getDatasourceTypeId(String datasourcetype);
-	public String getDatasourceId(String internalurl);
-	public String getDatalayersourceId(String layername);
-	public String getUnofficialDatalayerId(String collabroom, String folderid);
-	public List<String> getAvailableStyles();
-	public Datalayerfolder getDatalayerfolder(String datalayerid, String folderid);
-	public Datalayerfolder getDatalayerfolder(int datalayerfolderId);
-	public int getNextDatalayerFolderId();
-	public String insertDataSource(Datasource source);
-	public String insertDataLayer(String dataSourceId, Datalayer datalayer);
-	public int insertDataLayerFolder(String folderId, String datalayerId, int folderIndex);
-	public Datasource getDatasource(String datasourceId);
-	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder);
-	public void decrementIndexes(String parentFolderId, int index);
-	public void incrementIndexes(String parentFolderId, int index);
-	public int getNextDatalayerFolderIndex(String folderid);
+public class RabbitQueueConsumer extends RabbitClient {
+
+	private QueueingConsumer consumer = null;
+
+	public RabbitQueueConsumer(String hostname, String queueName) throws IOException {
+		super(hostname);
+		initialize(hostname, queueName);
+	}
+
+	public RabbitQueueConsumer(String hostname, String queueName,
+			String rabbitUsername, String rabbitUserpwd) throws IOException {
+		super(hostname, rabbitUsername, rabbitUserpwd);
+		initialize(hostname, queueName);
+	}
+	
+	private void initialize(String hostname, String queueName) throws IOException {
+		declareQueue(queueName);
+		System.out.println(" [*] Waiting for messages on queue " + queueName + ". To exit press CTRL+C");
+		consumer = new QueueingConsumer(getChannel());
+		getChannel().basicConsume(queueName, true, consumer);		
+	}
+
+	public String consume() throws ShutdownSignalException, ConsumerCancelledException, InterruptedException {
+		String ret = null;
+		QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+		ret = new String(delivery.getBody());
+		return ret;
+	}
+
+	public void destroy() {
+		if (consumer != null) {
+			consumer = null;
+		}
+		super.destroy();
+	}	
 }

@@ -29,7 +29,9 @@
  */
 package edu.mit.ll.nics.nicsdao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,18 +127,6 @@ public class FolderDAOImpl extends GenericDAO implements FolderDAO {
         return handler.getResults();
     }
     
-    public int getMaxFolderIndex(String folderid){
-    	QueryModel query = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
-    			.selectFromTableWhere("max(index)").equals(SADisplayConstants.PARENT_FOLDER_ID, folderid);
-    	try{
-    		return this.template.queryForInt(query.toString(), 
-    				new MapSqlParameterSource(SADisplayConstants.PARENT_FOLDER_ID, folderid));
-    	}catch(Exception e){
-    		log.info("Could not find max index for folder with parent folder id #0", folderid);
-    	}
-    	return -1;
-    }
-    
     /** getRootFolder
 	 *  @param String name
 	 *  @return RootFolder 
@@ -193,11 +183,12 @@ public class FolderDAOImpl extends GenericDAO implements FolderDAO {
 		}
     }
     
-    public int getNextFolderIndex(String folderid){
+	public int getNextFolderIndex(String folderid){
 		int result = 0;
-    	
-    	QueryModel indexQuery = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
-    		.selectMaxFromTable(SADisplayConstants.INDEX).where().equals(SADisplayConstants.FOLDER_ID, folderid);
+		
+		QueryModel indexQuery = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
+			.selectMaxFromTable(SADisplayConstants.INDEX)
+			.where().equals(SADisplayConstants.PARENT_FOLDER_ID, folderid);
 		
 		try{
 			int index = this.template.queryForObject(indexQuery.toString(), indexQuery.getParameters(), Integer.class);
@@ -206,7 +197,7 @@ public class FolderDAOImpl extends GenericDAO implements FolderDAO {
 			log.info("Could not find next folder index for folderid #0", folderid);
 		}
 		return result;
-    }
+	}
     
     public OrgFolder getFolderOwner(String folderid){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_FOLDER_TABLE)
@@ -223,6 +214,103 @@ public class FolderDAOImpl extends GenericDAO implements FolderDAO {
     	
     	return handler.getResults().get(0); //orgfolder and folderid aren't contrained in the database
     }
+    
+	@Override
+	public Folder createFolder(Folder folder) {
+		
+		try{
+			
+			MapSqlParameterSource map = new MapSqlParameterSource();
+			map.addValue(SADisplayConstants.FOLDER_ID, UUID.randomUUID());
+			map.addValue(SADisplayConstants.FOLDER_NAME, folder.getFoldername());
+			map.addValue(SADisplayConstants.PARENT_FOLDER_ID, folder.getParentfolderid());
+			map.addValue(SADisplayConstants.INDEX, folder.getIndex());
+			map.addValue(SADisplayConstants.WORKSPACE_ID, folder.getWorkspaceid());
+			
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
+					.insertInto(new ArrayList<String>(map.getValues().keySet()))
+					.returnValue("*");
+			
+			JoinRowCallbackHandler<Folder> handler = getHandlerWith();
+			
+			this.template.query(queryModel.toString(), map, handler);
+			
+			return handler.getSingleResult();
+			
+		}
+		catch(Exception e){
+			log.info("Failed to create folder #0", folder.getFoldername());
+		}
+		
+		return null;
+	}
+
+	@Override
+	public Folder updateFolder(Folder folder) {
+		
+		try{
+
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
+					.update().equals(SADisplayConstants.FOLDER_NAME).comma().equals(SADisplayConstants.PARENT_FOLDER_ID)
+	    			.comma().equals(SADisplayConstants.INDEX).comma().equals(SADisplayConstants.WORKSPACE_ID)
+	    			.where().equals(SADisplayConstants.FOLDER_ID).returnValue("*");
+
+			MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.FOLDER_ID,folder.getFolderid());
+			map.addValue(SADisplayConstants.FOLDER_NAME, folder.getFoldername());
+			map.addValue(SADisplayConstants.PARENT_FOLDER_ID, folder.getParentfolderid());
+			map.addValue(SADisplayConstants.INDEX, folder.getIndex());
+			map.addValue(SADisplayConstants.WORKSPACE_ID, folder.getWorkspaceid());
+			
+			JoinRowCallbackHandler<Folder> handler = getHandlerWith();
+			
+			this.template.query(queryModel.toString(), map, handler);
+			
+			return handler.getSingleResult();
+		}
+		catch(Exception e){
+			log.info("Failed to update folder #0", folder.getFoldername());
+		}
+		
+		return null;
+	}
+
+	@Override
+	public boolean removeFolder(String folderid) {
+		
+		try{
+			
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
+					.deleteFromTableWhere().equals(SADisplayConstants.FOLDER_ID);
+			
+			this.template.update(queryModel.toString(), new MapSqlParameterSource(SADisplayConstants.FOLDER_ID,folderid));
+			
+			return true;
+			
+		}catch(Exception e){
+			log.info("Failed to delete folder with folderId #0", folderid);
+		}
+		
+		return false;
+	}
+
+	@Override
+	public void decrementIndexes(String parentFolderId, int index) {
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
+				.update(SADisplayConstants.INDEX).value("= index - 1")
+				.where().equals(SADisplayConstants.PARENT_FOLDER_ID, parentFolderId)
+				.and().greaterThanOrEquals(SADisplayConstants.INDEX, index);
+		this.template.update(queryModel.toString(), queryModel.getParameters());
+	}
+
+	@Override
+	public void incrementIndexes(String parentFolderId, int index) {
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.FOLDER_TABLE)
+				.update(SADisplayConstants.INDEX).value("= index + 1")
+				.where().equals(SADisplayConstants.PARENT_FOLDER_ID, parentFolderId)
+				.and().greaterThanOrEquals(SADisplayConstants.INDEX, index);
+		this.template.update(queryModel.toString(), queryModel.getParameters());
+	}
+	
     
     /** getRootFolderHandlerWith
    	 *  @param mappers - optional additional mappers
@@ -249,4 +337,5 @@ public class FolderDAOImpl extends GenericDAO implements FolderDAO {
 	private JoinRowCallbackHandler<Folder> getHandlerWith(JoinRowMapper... mappers) {
         return new JoinRowCallbackHandler(new FolderRowMapper(), mappers);
     }
+
 }

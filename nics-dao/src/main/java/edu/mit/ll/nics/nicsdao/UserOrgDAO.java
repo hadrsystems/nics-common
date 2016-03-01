@@ -36,13 +36,13 @@ import edu.mit.ll.nics.common.entity.User;
 import edu.mit.ll.nics.common.entity.UserOrg;
 
 public interface UserOrgDAO extends BaseDAO {
-	public UserOrg getUserOrgById(int orgId, int userId, int workspaceId);
+	public UserOrg getUserOrgById(int orgId, long userId, int workspaceId);
 	public UserOrg getUserOrgByName(String orgName, String username, int workspaceId);
 	public UserOrg getUserOrg(int userOrgId);
 	public List<Map<String, Object>> getEnabledUserOrgs(int orgid, int workspaceId);
 	public List<Map<String, Object>> getDisabledUserOrgs(int orgid, int workspaceId);
 	public int getNextUserOrgId();
-	public boolean hasEnabledOrgs(int userid, int workspaceid);
+	public int hasEnabledOrgs(int userid, int workspaceid);
 	public int getUserOrgId(int orgId, int userId);
 	public int setUserOrgEnabled(int userOrgWorkspaceId, boolean enabled);
 	public int getSystemRoleId(int userOrgId);

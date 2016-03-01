@@ -398,14 +398,14 @@ public class Feature extends SADisplayMessageEntity implements SADisplayPersiste
 	}
 	
 	@Column(name="attributes")
-	public String getFeatureattributes()
+	public String getAttributes()
 	{
 		return featureattributes;
 	}
 	
-	public void setFeatureattributes(String featureattributes)
+	public void setAttributes(String featureattributes)
 	{
-		this.featureattributes = encodeJSONObject(featureattributes);
+		this.featureattributes = featureattributes;
 	}
 	
 

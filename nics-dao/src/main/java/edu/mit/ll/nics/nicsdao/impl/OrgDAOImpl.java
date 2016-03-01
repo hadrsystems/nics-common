@@ -29,13 +29,16 @@
  */
 package edu.mit.ll.nics.nicsdao.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -98,6 +101,35 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
 		
 		return this.template.queryForList(queryModel.toString(), params, String.class);
 	}
+    
+    /** getOrgAdmins 
+     * @param int orgid
+   	 * @return String - return a comma delimited list of email addresses
+   	 */
+    public List<Integer> getOrgAdmins(int orgid, int workspaceId){
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_TABLE)
+				.selectFromTable(SADisplayConstants.USER_ID)
+				.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ID)
+				.join(SADisplayConstants.USER_ORG_WORKSPACE_TABLE).using(SADisplayConstants.USER_ORG_ID)
+				.where().equals(SADisplayConstants.ORG_ID)
+				.and().equals(SADisplayConstants.ACTIVE)
+				.and().equals(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED)
+				.and().equals(SADisplayConstants.USER_ENABLED, SADisplayConstants.USER_ENABLED_PARAM, null)
+				.and().open().equals(SADisplayConstants.SYSTEM_ROLE_ID, ADMIN_ID, null) //open = (
+				.or().equals(SADisplayConstants.SYSTEM_ROLE_ID, SUPER_ID, null)
+				.close(); //close = )
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+        params.put(SADisplayConstants.ORG_ID, orgid);
+        params.put(ADMIN_ID, SADisplayConstants.ADMIN_ROLE_ID);
+        params.put(SUPER_ID, SADisplayConstants.SUPER_ROLE_ID);
+        params.put(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true);
+        params.put(SADisplayConstants.ACTIVE, true);
+        params.put(SADisplayConstants.USER_ENABLED_PARAM, true);
+		
+		return this.template.queryForList(queryModel.toString(), params, Integer.class);
+	}
 	
     /** getOrgFolders
      * @param int orgid
@@ -127,6 +159,36 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
     			.and().equals(SADisplayConstants.WORKSPACE_ID).orderBy(SADisplayConstants.ORG_NAME);
     	
     	JoinRowCallbackHandler<Org> handler = getHandlerWith(new UserOrgRowMapper());
+        template.query(queryModel.toString(), 
+            new MapSqlParameterSource(SADisplayConstants.USER_ID, userid)
+        	.addValue(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true)
+        	.addValue(SADisplayConstants.WORKSPACE_ID, workspaceId), 
+            handler);
+        return handler.getResults();
+    }
+    
+    /** getUserOrgs
+     * @param id - userid
+   	 * @return List<Org> - List of organizations this user belongs to
+   	 */
+    public List<Org> getAdminOrgs(int userid, int workspaceId){
+    	String roles = StringUtils.join(Arrays.asList(new Integer(SADisplayConstants.SUPER_ROLE_ID).toString(),
+    			new Integer(SADisplayConstants.ADMIN_ROLE_ID).toString()), ",");
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
+    			.selectAllFromTable()
+    			.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.ORG_ID)
+    			.join(SADisplayConstants.USER_ORG_WORKSPACE_TABLE).using(SADisplayConstants.USER_ORG_ID)
+    			.join(SADisplayConstants.ORG_ORGTYPE_TABLE).using(SADisplayConstants.ORG_ID)
+    			.where().equals(SADisplayConstants.USER_ID)
+    			.and().equals(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED)
+    			.and().equals(SADisplayConstants.WORKSPACE_ID)
+    			.and().inAsSQL(SADisplayConstants.SYSTEM_ROLE_ID, roles)
+    			.orderBy(SADisplayConstants.ORG_NAME);
+    	
+    	System.out.println("ADMIN ORGS: " + queryModel.toString());
+    	
+    	JoinRowCallbackHandler<Org> handler = getHandlerWith(new UserOrgRowMapper(),new OrgOrgTypeRowMapper());
         template.query(queryModel.toString(), 
             new MapSqlParameterSource(SADisplayConstants.USER_ID, userid)
         	.addValue(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true)
@@ -184,7 +246,7 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
     }
     
     public List<Org> getOrgsByType(int orgtypeid){
-    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_ORGTYPE_TABLE)
     			.selectAllFromTable()
     			.join(SADisplayConstants.ORG_ORGTYPE_TABLE).using(SADisplayConstants.ORG_ID)
     			.where().equals(SADisplayConstants.ORG_TYPE_ID);
@@ -195,23 +257,51 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
     	return handler.getResults();
     }
     
-    public void removeOrgOrgType(int orgId, int orgTypeId){
+    public int removeOrgOrgType(int orgId, int orgTypeId){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_ORGTYPE_TABLE)
 				.deleteFromTableWhere().equals(SADisplayConstants.ORG_ID).and().equals(SADisplayConstants.ORG_TYPE_ID);
 		
-		this.template.update(queryModel.toString(), 
+		return this.template.update(queryModel.toString(), 
 				new MapSqlParameterSource(SADisplayConstants.ORG_TYPE_ID, orgTypeId)
 				.addValue(SADisplayConstants.ORG_ID, orgId));
 	}
     
     public List<Org> getOrganizations(){
+    	List<Org> orgs = new ArrayList<Org>();
+    	
+    	//Search for Orgs associated with Org Types
 		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
-				.selectAllFromTable();
+				.selectAllFromTable().join(SADisplayConstants.ORG_ORGTYPE_TABLE).using(SADisplayConstants.ORG_ID);
 		
-		JoinRowCallbackHandler<Org> handler = getHandlerWith();
+		JoinRowCallbackHandler<Org> handler = getHandlerWith(new OrgOrgTypeRowMapper());
 		this.template.query(queryModel.toString(), new MapSqlParameterSource(), handler);
-    	return handler.getResults();
+    	
+		orgs.addAll(handler.getResults());
+    	
+    	//Search for Orgs without Org Types
+    	JoinRowCallbackHandler<Org> allOrgsHandler = getHandlerWith();
+    	QueryModel allOrgQuery = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
+    			.selectAllFromTable().where().notIn(SADisplayConstants.ORG_ID, 
+						QueryManager.createQuery(SADisplayConstants.ORG_ORGTYPE_TABLE)
+						.selectFromTable(SADisplayConstants.ORG_ID).toString());
+		
+    	this.template.query(allOrgQuery.toString(), new MapSqlParameterSource(), allOrgsHandler);
+    	
+		orgs.addAll(allOrgsHandler.getResults());
+		return orgs;
 	}
+    
+    public List<OrgOrgType> getOrgTypes(int orgId){
+    	QueryModel query = QueryManager.createQuery(SADisplayConstants.ORG_ORGTYPE_TABLE)
+    			.selectAllFromTable().where().equals(SADisplayConstants.ORG_ID);
+    	
+    	JoinRowCallbackHandler<OrgOrgType> handler = getOrgOrgTypeHandlerWith();
+		
+		this.template.query(query.toString(), new MapSqlParameterSource(SADisplayConstants.ORG_ID, orgId), handler);
+		
+		return handler.getResults();
+    	
+    }
     
 	public List<OrgType> getOrgTypes(){
 		
@@ -231,10 +321,13 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
 				.selectAllFromTable().orderBy(SADisplayConstants.ORG_TYPE_ID).asc();
 		
 		JoinRowCallbackHandler<OrgOrgType> handler = getOrgOrgTypeHandlerWith();
-		
-		this.template.query(query.toString(), new MapSqlParameterSource(), handler);
-		
-		return handler.getResults();
+		try{
+			this.template.query(query.toString(), new MapSqlParameterSource(), handler);
+			
+			return handler.getResults();
+		}catch(Exception e){
+			return new ArrayList<OrgOrgType>();
+		}
 	}
 	
 	public Org getOrganization(String name){
@@ -249,6 +342,23 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
 			ret = handler.getSingleResult();
 		} catch(Exception e) {
 			log.error("Exception querying for Organization(#0): #1", name, e.getMessage());
+		}
+		
+		return ret;
+	}
+	
+	public Org getOrganization(int orgId){
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
+				.selectAllFromTableWhere().equals(SADisplayConstants.ORG_ID);
+		
+		JoinRowCallbackHandler<Org> handler = getHandlerWith();
+		this.template.query(queryModel.toString(), new MapSqlParameterSource(SADisplayConstants.ORG_ID, orgId), handler);
+    	
+		Org ret = null;
+		try {
+			ret = handler.getSingleResult();
+		} catch(Exception e) {
+			log.error("Exception querying for Organization(#0): #1", orgId, e.getMessage());
 		}
 		
 		return ret;
@@ -306,6 +416,75 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
 			log.info("No distribution list was found for incident id #0", incidentid);
 		}
 		return null;
+	}
+	
+	public int addOrg(Org org) throws Exception{
+		if(org.getOrgId() > 0) {
+			QueryModel query = QueryManager.createQuery(SADisplayConstants.ORG_TABLE).update()
+					.equals(SADisplayConstants.ORG_NAME).comma()
+					.equals(SADisplayConstants.COUNTY).comma()
+					.equals(SADisplayConstants.STATE).comma()				
+					.equals(SADisplayConstants.PREFIX).comma()			
+					.equals(SADisplayConstants.DISTRIBUTION).comma()			
+					.equals(SADisplayConstants.DEFAULT_LAT).comma()			
+					.equals(SADisplayConstants.DEFAULT_LON).comma()			
+					.equals(SADisplayConstants.COUNTRY)
+					.where().equals(SADisplayConstants.ORG_ID);
+			
+			BeanPropertySqlParameterSource map = new BeanPropertySqlParameterSource(org);
+			
+			int ret = -1;
+			try {
+				ret = this.template.update(query.toString(), map);
+			} catch (Exception e) {
+				throw new Exception("Error updating the org with id: " + 
+						org.getOrgId() + ": " + e.getMessage());
+			}
+			
+			return org.getOrgId();
+		}else{
+			List<String> fields = Arrays.asList(
+		    		SADisplayConstants.ORG_ID, SADisplayConstants.ORG_NAME, SADisplayConstants.COUNTY,
+		    		SADisplayConstants.STATE, SADisplayConstants.PREFIX, SADisplayConstants.DISTRIBUTION,
+		    		SADisplayConstants.DEFAULT_LAT, SADisplayConstants.DEFAULT_LON, SADisplayConstants.COUNTRY);
+		    		
+	    	QueryModel model = QueryManager.createQuery(SADisplayConstants.ORG_TABLE).insertInto(fields);
+	    	
+	    	//generate an orgid if not set
+	    	if (org.getOrgId() <= 0) {
+	    		QueryModel idModel = QueryManager.createQuery("org_seq").selectNextVal();
+	    		int orgId = this.template.queryForObject(idModel.toString(), new MapSqlParameterSource(), Integer.class);
+	    		org.setOrgId(orgId);
+	    	}
+	    	
+	    	try {
+	    		this.template.update(model.toString(), new BeanPropertySqlParameterSource(org));
+	    		return org.getOrgId();
+	    	} catch(Exception e) {
+	    		throw new Exception("Unhandled exception while persisting Org entity:", e);
+	    	}
+		}
+	}
+	
+	public int addOrgOrgType(int orgId, int orgTypeId) throws Exception{
+		List<String> fields = Arrays.asList(
+	    		SADisplayConstants.ORG_ORGTYPE_ID, SADisplayConstants.ORG_TYPE_ID,
+	    		SADisplayConstants.ORG_ID);
+	    		
+    	QueryModel model = QueryManager.createQuery(SADisplayConstants.ORG_ORGTYPE_TABLE).insertInto(fields);
+    	
+    	//generate an orgid if not set
+    	QueryModel orgOrgTypeIdQuery = QueryManager.createQuery("hibernate_sequence").selectNextVal();
+		int orgOrgTypeId = this.template.queryForObject(orgOrgTypeIdQuery.toString(), new MapSqlParameterSource(), Integer.class);
+		
+    	try {
+    		return this.template.update(model.toString(), new MapSqlParameterSource(
+    				SADisplayConstants.ORG_ORGTYPE_ID, orgOrgTypeId)
+    				.addValue(SADisplayConstants.ORG_TYPE_ID, orgTypeId)
+    				.addValue(SADisplayConstants.ORG_ID, orgId));
+    	} catch(Exception e) {
+    		throw new Exception("Unhandled exception while persisting Org entity:", e);
+    	}
 	}
     
     /** getHandlerWith

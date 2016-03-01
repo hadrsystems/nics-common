@@ -45,6 +45,9 @@ public interface FolderDAO extends BaseDAO {
     public int getNextFolderIndex(String folderid);
     public OrgFolder getFolderOwner(String folderid);
     public Folder getFolderByName(String foldername, int workspaceId);
-    public int getMaxFolderIndex(String folderid);
-	
+    public Folder createFolder(Folder folder);
+    public Folder updateFolder(Folder folder);
+    public boolean removeFolder(String folderid);
+    public void decrementIndexes(String parentFolderId, int index);
+    public void incrementIndexes(String parentFolderId, int index);
 }

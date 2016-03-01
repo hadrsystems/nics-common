@@ -91,6 +91,7 @@ public final class SADisplayConstants {
 	public static final String INCIDENT_TYPE_TABLE = "incidenttype";
 	public static final String INCIDENT_INCIDENTTYPE_TABLE = "incident_incidenttype";
 	public static final String USER_ORG_WORKSPACE_TABLE = "userorg_workspace";
+    public static final String UXOREPORT_TABLE = "Uxoreport";
 	
 	//COMMON COLUMN NAMES
 	public static final String CREATED = "created";
@@ -336,4 +337,8 @@ public final class SADisplayConstants {
 	public static final String DELETED = "deleted";
 	public static final String DEFAULT = "default";
 	public static final String USER_TABLE = "\"user\"";
+	public static final String COUNTY = "county";
+	public static final String LEGEND = "legend";
+    public static final String UXOREPORT_LOCATION = "location";
+    public static final String UXOREPORTID = "uxoreportid";
 }

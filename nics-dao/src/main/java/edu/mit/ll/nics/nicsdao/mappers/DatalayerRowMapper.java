@@ -51,6 +51,7 @@ public class DatalayerRowMapper extends JoinRowMapper<Datalayer> {
         datalayer.setDatalayersourceid(rs.getString(SADisplayConstants.DATALAYER_SOURCE_ID));
         datalayer.setDisplayname(rs.getString(SADisplayConstants.DISPLAY_NAME));        
         datalayer.setUsersessionid(rs.getInt(SADisplayConstants.USERSESSION_ID));
+        datalayer.setLegend(rs.getString(SADisplayConstants.LEGEND));
         return datalayer;
     }
     

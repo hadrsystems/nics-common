@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -44,6 +45,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 
+import edu.mit.ll.dao.QueryBuilder;
 import edu.mit.ll.dao.QueryModel;
 import edu.mit.ll.jdbc.JoinRowCallbackHandler;
 import edu.mit.ll.jdbc.JoinRowMapper;
@@ -257,7 +259,7 @@ private static Logger log;
 		return handler.getResults();
 	}
 	
-	private boolean isSecure(long collabroomId){
+	public boolean isSecure(long collabroomId){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
 				.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
 				.equals(SADisplayConstants.COLLAB_ROOM_ID);
@@ -390,6 +392,49 @@ private static Logger log;
 			log.error("Unhandled exception querying for accessibleCollabRooms: " + ex.getMessage(), ex);
 			throw ex;
 		}
+	}
+	
+
+    public List<Map<String, Object>> getCollabRoomSecureUsers(int collabRoomId){
+    	StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.USER_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.USER_ID);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.SYSTEM_ROLE_ID);
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
+   			 	 .selectFromTable(fields.toString())
+				 .join(SADisplayConstants.USER_ESCAPED).using(SADisplayConstants.USER_ID)
+				 .where().equals(SADisplayConstants.COLLAB_ROOM_ID);
+				 
+    	MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.COLLAB_ROOM_ID, collabRoomId);
+		
+		return template.queryForList(queryModel.toString(), map);
+	}
+    
+    public List<Map<String, Object>> getUsersWithoutPermission(int collabroomid, int orgId, int workspaceId){
+		StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.USER_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.USER_ID);
+    	
+    	QueryModel permissionQuery = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
+   			 	 .selectFromTable(SADisplayConstants.USER_ID)
+				 .where().equals(SADisplayConstants.COLLAB_ROOM_ID);
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+				.selectFromTable(fields.toString())
+				.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ID)
+				.join(SADisplayConstants.USER_ORG_WORKSPACE_TABLE).using(SADisplayConstants.USER_ORG_ID)
+				.where().notIn(SADisplayConstants.USER_ID, permissionQuery.toString())
+				.and().equals(SADisplayConstants.ORG_ID)
+				.and().equals(SADisplayConstants.WORKSPACE_ID);
+		
+		return template.queryForList(queryModel.toString(), 
+				new MapSqlParameterSource(SADisplayConstants.COLLAB_ROOM_ID, collabroomid)
+				.addValue(SADisplayConstants.ORG_ID, orgId)
+				.addValue(SADisplayConstants.WORKSPACE_ID, workspaceId));
 	}
 	
 	

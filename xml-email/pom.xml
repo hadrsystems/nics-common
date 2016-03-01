@@ -40,7 +40,7 @@
 	<parent>
 		<groupId>edu.mit.ll.nics.common</groupId>
 		<artifactId>master-pom</artifactId>
-		<version>6.1</version>
+		<version>6.1.1</version>
 		<relativePath>..</relativePath>
 	</parent>
 	
@@ -60,10 +60,14 @@
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-stream</artifactId>
 		</dependency>
-<!--TODO		<dependency>
+<!--		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-xmpp</artifactId>
 		</dependency>-->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -77,11 +81,6 @@
 			<artifactId>slf4j-simple</artifactId>
 		</dependency>
 		
-		<!-- MITLL dependencies 
-		<dependency>
-                	<groupId>edu.mit.ll.nics.common</groupId>
-                	<artifactId>RabbitMQCamelComponent</artifactId>
-        	</dependency>	-->
 	</dependencies>
 </project>
 

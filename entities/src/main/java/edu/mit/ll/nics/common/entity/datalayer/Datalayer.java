@@ -67,8 +67,9 @@ public class Datalayer extends SADisplayMessageEntity implements SADisplayPersis
     private boolean baselayer;
     private String displayname;    
     private Date created;
+    private String legend;
     private Set<DatalayerCollabroom> datalayerCollabrooms = new HashSet<DatalayerCollabroom>(0);
-    private Set<Datalayerfolder> datalayerFolders = new HashSet<Datalayerfolder>(0);
+    private Set<Datalayerfolder> datalayerfolders = new HashSet<Datalayerfolder>(0);
     
 
     public Datalayer() {
@@ -76,19 +77,20 @@ public class Datalayer extends SADisplayMessageEntity implements SADisplayPersis
 
     public Datalayer(String datalayerid, Usersession usersession,
             Datalayersource datalayersource, Folder folder, boolean baselayer,
-            String displayname, Date created) {
+            String displayname, Date created, String legend) {
         this.datalayerid = datalayerid;
         this.usersession = usersession;
         this.datalayersource = datalayersource;
         this.baselayer = baselayer;
         this.displayname = displayname;
         this.created = created;
+        this.legend = legend;
     }
 
     public Datalayer(String datalayerid, Usersession usersession,
             Datalayersource datalayersource, Folder folder, boolean baselayer,
             String displayname, Date created,
-            Set<DatalayerCollabroom> datalayerCollabrooms) {
+            Set<DatalayerCollabroom> datalayerCollabrooms, String legend) {
         this.datalayerid = datalayerid;
         this.usersession = usersession;
         this.datalayersource = datalayersource;
@@ -96,6 +98,7 @@ public class Datalayer extends SADisplayMessageEntity implements SADisplayPersis
         this.displayname = displayname;
         this.created = created;
         this.datalayerCollabrooms = datalayerCollabrooms;
+        this.legend = legend;
     }
 
     @Id
@@ -168,12 +171,12 @@ public class Datalayer extends SADisplayMessageEntity implements SADisplayPersis
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "datalayer")
     public Set<Datalayerfolder> getDatalayerfolders() {
-        return this.datalayerFolders;
+        return this.datalayerfolders;
     }
 
     public void setDatalayerfolders(
             Set<Datalayerfolder> datalayerfolders) {
-        this.datalayerFolders = datalayerfolders;
+        this.datalayerfolders = datalayerfolders;
     }
 
     @Column(name = "datalayersourceid", nullable = false)
@@ -193,6 +196,15 @@ public class Datalayer extends SADisplayMessageEntity implements SADisplayPersis
     public void setUsersessionid(int usersessionid) {
         this.usersessionid = usersessionid;
     }
+    
+    @Column(name = "legend", length = 256)
+    public String getLegend() {
+        return legend;
+    }
+
+    public void setLegend(String legend) {
+        this.legend = legend;
+    }
 
     @Override
     public JSONObject toJSONObject() {
@@ -204,6 +216,7 @@ public class Datalayer extends SADisplayMessageEntity implements SADisplayPersis
             json.put("baselayer", this.baselayer);
             json.put("datalayersourceid", this.datalayersourceid);
             json.put("usersessionid", this.usersessionid);
+            json.put("legend", this.legend);
         } catch (JSONException ex) {
             Logger.getLogger(Document.class.getName()).log(Level.SEVERE, null, ex);
         }

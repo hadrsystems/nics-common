@@ -64,7 +64,7 @@ import org.json.JSONObject;
 	)
 public class Org extends SADisplayMessageEntity implements SADisplayPersistedEntity {
 
-	private int orgid;
+	private int orgId;
 	private String name;
 	private String county;
 	private String state;
@@ -77,13 +77,14 @@ public class Org extends SADisplayMessageEntity implements SADisplayPersistedEnt
 	private String country;
 	private Date created;
 	private Set<UserOrg> userorgs = new HashSet<UserOrg>(0);
+	private Set<OrgOrgType> orgTypes = new HashSet<OrgOrgType>(0);
 
 	public Org() {
 	}
 
-	public Org(int orgid, String name, String prefix, double defaultlatitude,
+	public Org(int orgId, String name, String prefix, double defaultlatitude,
 			double defaultlongitude, Date created) {
-		this.orgid = orgid;
+		this.orgId = orgId;
 		this.name = name;
 		this.prefix = prefix;
 		this.defaultlatitude = defaultlatitude;
@@ -91,11 +92,11 @@ public class Org extends SADisplayMessageEntity implements SADisplayPersistedEnt
 		this.created = created;
 	}
 
-	public Org(int orgid, String name, String county, String state,
+	public Org(int orgId, String name, String county, String state,
 			String timezone, String prefix, String distribution,
 			double defaultlatitude, double defaultlongitude,
 			Integer parentorgid, String country, Date created, Set userorgs) {
-		this.orgid = orgid;
+		this.orgId = orgId;
 		this.name = name;
 		this.county = county;
 		this.state = state;
@@ -113,11 +114,11 @@ public class Org extends SADisplayMessageEntity implements SADisplayPersistedEnt
 	@Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
 	@Column(name = "orgid", unique = true, nullable = false)
 	public int getOrgId() {
-		return this.orgid;
+		return this.orgId;
 	}
 
-	public void setOrgId(int orgid) {
-		this.orgid = orgid;
+	public void setOrgId(int orgId) {
+		this.orgId = orgId;
 	}
 
 	@Column(name = "name", nullable = false, length = 50)
@@ -244,10 +245,18 @@ public class Org extends SADisplayMessageEntity implements SADisplayPersistedEnt
 		this.userorgs = userorgs;
 	}
 	
+	public Set<OrgOrgType> getOrgTypes() {
+		return this.orgTypes;
+	}
+
+	public void setOrgTypes(Set<OrgOrgType> orgTypes) {
+		this.orgTypes = orgTypes;
+	}
+	
 	public JSONObject toJSONObject(){
 		JSONObject obj = new JSONObject();
 		try{
-			obj.put("orgid", this.orgid);
+			obj.put("orgId", this.orgId);
 			obj.put("name", this.name);
 			obj.put("county", this.county);
 			obj.put("state", this.state);

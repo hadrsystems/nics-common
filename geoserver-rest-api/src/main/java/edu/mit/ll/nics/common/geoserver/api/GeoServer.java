@@ -493,9 +493,7 @@ public class GeoServer extends SuperGeoServer {
      * @return success of adding object
      */
     public boolean addStyle(String styleName, String styleXml) {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("name", styleName);
-        return restPost("/styles", styleXml, "application/vnd.ogc.sld+xml", params);
+        return restPost("/styles?name=" + styleName, styleXml, "application/vnd.ogc.sld+xml");
     }
 
     /**

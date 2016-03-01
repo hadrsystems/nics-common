@@ -72,42 +72,63 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 	 *  @return JSONArray - array of objects representing a datalayer.
 	 *  Each object has information needed by the UI to popuplate the folder
 	 */
-	public List<Datalayer> getDatalayerFolders(String folderid){
+	public List<Datalayerfolder> getDatalayerFolders(String folderid){
 		
-		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_TABLE).selectAllFromTable()
-				.join(SADisplayConstants.DATALAYER_FOLDER_TABLE).using(SADisplayConstants.DATALAYER_ID)
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE).selectAllFromTable()
+				.join(SADisplayConstants.DATALAYER_TABLE).using(SADisplayConstants.DATALAYER_ID)
 				.join(SADisplayConstants.DATALAYER_SOURCE_TABLE).using(SADisplayConstants.DATALAYER_SOURCE_ID)
 				.join(SADisplayConstants.DATASOURCE_TABLE).using(SADisplayConstants.DATASOURCE_ID)
 				.join(SADisplayConstants.DATASOURCE_TYPE_TABLE).using(SADisplayConstants.DATASOURCE_TYPE_ID)
 				.where().equals(SADisplayConstants.FOLDER_ID).orderBy(SADisplayConstants.DATALAYERFOLDER_INDEX);
 		
-		JoinRowCallbackHandler<Datalayer> handler = getHandlerWith(new DatalayersourceRowMapper().attachAdditionalMapper(
-				new DatasourceRowMapper().attachAdditionalMapper(new DatasourcetypeRowMapper())
-		));
+		JoinRowCallbackHandler<Datalayerfolder> handler = getDatalayerfolderHandlerWith(
+				new DatalayerRowMapper().attachAdditionalMapper(
+						new DatalayersourceRowMapper().attachAdditionalMapper(
+								new DatasourceRowMapper().attachAdditionalMapper(
+										new DatasourcetypeRowMapper()
+									)
+							)
+					)
+		);
 		
 		template.query(queryModel.toString(), 
 				new MapSqlParameterSource(SADisplayConstants.FOLDER_ID, folderid), handler);
-    	return handler.getResults();
+		return handler.getResults();
 	}
 	
 	public Datalayerfolder getDatalayerfolder(String datalayerid, String folderid){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
-		.selectAllFromTableWhere().equals(SADisplayConstants.DATALAYER_ID, datalayerid).and()
-		.equals(SADisplayConstants.FOLDER_ID, folderid);
+				.selectAllFromTable()
+				.join(SADisplayConstants.DATALAYER_TABLE).using(SADisplayConstants.DATALAYER_ID)
+				.join(SADisplayConstants.DATALAYER_SOURCE_TABLE).using(SADisplayConstants.DATALAYER_SOURCE_ID)
+				.join(SADisplayConstants.DATASOURCE_TABLE).using(SADisplayConstants.DATASOURCE_ID)
+				.join(SADisplayConstants.DATASOURCE_TYPE_TABLE).using(SADisplayConstants.DATASOURCE_TYPE_ID)
+				.where().equals(SADisplayConstants.FOLDER_ID, folderid)
+				.and().equals(SADisplayConstants.DATALAYER_ID, datalayerid)
+				.orderBy(SADisplayConstants.DATALAYERFOLDER_INDEX);
+		
+		JoinRowCallbackHandler<Datalayerfolder> handler = getDatalayerfolderHandlerWith(
+				new DatalayerRowMapper().attachAdditionalMapper(
+						new DatalayersourceRowMapper().attachAdditionalMapper(
+								new DatasourceRowMapper().attachAdditionalMapper(
+										new DatasourcetypeRowMapper()
+									)
+							)
+					)
+		);
+	
+		this.template.query(query.toString(), query.getParameters(), handler);
+		return handler.getSingleResult();
+	}
+	
+	public Datalayerfolder getDatalayerfolder(int datalayerfolderid){
+		QueryModel query = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
+		.selectAllFromTableWhere().equals(SADisplayConstants.DATALAYER_FOLDER_ID, datalayerfolderid);
 		
 		JoinRowCallbackHandler<Datalayerfolder> handler = getDatalayerfolderHandlerWith();
 	
-		this.template.query(query.toString(),
-				new MapSqlParameterSource(SADisplayConstants.DATALAYER_ID, datalayerid)
-				.addValue(SADisplayConstants.FOLDER_ID, folderid),
-				handler);
-		
-		try{
-			return handler.getSingleResult();
-		}catch(Exception e){
-			log.info("Error retrieving datalayer with datatlayerid #0 and folderid #1", datalayerid, folderid);
-		}
-		return null;
+		this.template.query(query.toString(), query.getParameters(), handler);
+		return handler.getSingleResult();
 	}
 	
 	public List<Datasource> getDatasources(String type){
@@ -174,14 +195,17 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 	
 	public String getDatasourceId(String internalurl){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.DATASOURCE_TABLE)
-		.selectAllFromTableWhere().equals(SADisplayConstants.DATASOURCE_INTERNAL_URL);
+			.selectAllFromTableWhere().equals(SADisplayConstants.DATASOURCE_INTERNAL_URL);
 		
 		JoinRowCallbackHandler<Datasource> handler = getDatasourceHandlerWith();
 		
 		this.template.query(query.toString(), new MapSqlParameterSource(SADisplayConstants.DATASOURCE_INTERNAL_URL, internalurl), handler);
 		
 		try{
-			return handler.getSingleResult().getDatasourceid(); //Query for results and get the first one?
+			Datasource ds = handler.getSingleResult();
+			if (ds != null) {
+				return ds.getDatasourceid();
+			}
 		}catch(Exception e){
 			log.info("Error retrieving datasource for internal url #0", internalurl);
 		}
@@ -283,6 +307,7 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 		map.addValue(SADisplayConstants.GLOBAL_VIEW, true); //TODO: add to datalayer model?
 		map.addValue(SADisplayConstants.CREATED, datalayer.getCreated());
 		map.addValue(SADisplayConstants.USERSESSION_ID, datalayer.getUsersessionid());
+		map.addValue(SADisplayConstants.LEGEND, datalayer.getLegend());
 			
 		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_TABLE)
 				.insertInto(new ArrayList(map.getValues().keySet()))
@@ -305,6 +330,71 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 				.returnValue(SADisplayConstants.DATALAYER_FOLDER_ID);
 		
 		return this.template.queryForObject(queryModel.toString(), map, Integer.class);
+	}
+	
+	@Override
+	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder) {
+		try{
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
+					.update().equals(SADisplayConstants.DATALAYER_ID)
+					.comma().equals(SADisplayConstants.FOLDER_ID)
+					.comma().equals(SADisplayConstants.INDEX)
+					.where().equals(SADisplayConstants.DATALAYER_FOLDER_ID).returnValue("*");
+
+			MapSqlParameterSource map = new MapSqlParameterSource();
+			map.addValue(SADisplayConstants.DATALAYER_FOLDER_ID, dlFolder.getDatalayerfolderid());
+			map.addValue(SADisplayConstants.DATALAYER_ID, dlFolder.getDatalayerid());
+			map.addValue(SADisplayConstants.FOLDER_ID, dlFolder.getFolderid());
+			map.addValue(SADisplayConstants.INDEX, dlFolder.getIndex());
+			
+			JoinRowCallbackHandler<Datalayerfolder> handler = getDatalayerfolderHandlerWith();
+			
+			this.template.query(queryModel.toString(), map, handler);
+			
+			return handler.getSingleResult();
+		}
+		catch(Exception e){
+			log.info("Failed to update folder #0", dlFolder.getDatalayerfolderid());
+		}
+		
+		return null;
+	}
+	
+	@Override
+	public int getNextDatalayerFolderIndex(String folderid){
+		int result = 0;
+		
+		QueryModel indexQuery = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
+				.selectMaxFromTable(SADisplayConstants.INDEX)
+				.where().equals(SADisplayConstants.FOLDER_ID, folderid);
+		
+		try{
+			int index = this.template.queryForObject(indexQuery.toString(),
+					indexQuery.getParameters(), Integer.class);
+			result = index + 1;
+		}catch(Exception e){
+			log.info("Could not find next folder index for folderid #0", folderid);
+		}
+		return result;
+    }
+	
+	
+	@Override
+	public void decrementIndexes(String parentFolderId, int index) {
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
+				.update(SADisplayConstants.INDEX).value("= index - 1")
+				.where().equals(SADisplayConstants.FOLDER_ID, parentFolderId)
+				.and().greaterThanOrEquals(SADisplayConstants.INDEX, index);
+		this.template.update(queryModel.toString(), queryModel.getParameters());
+	}
+
+	@Override
+	public void incrementIndexes(String parentFolderId, int index) {
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
+				.update(SADisplayConstants.INDEX).value("= index + 1")
+				.where().equals(SADisplayConstants.FOLDER_ID, parentFolderId)
+				.and().greaterThanOrEquals(SADisplayConstants.INDEX, index);
+		this.template.update(queryModel.toString(), queryModel.getParameters());
 	}
 	
 	 /** getHandlerWith
@@ -351,5 +441,6 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 		private JoinRowCallbackHandler<Datalayerfolder> getDatalayerfolderHandlerWith(JoinRowMapper... mappers) {
 			 return new JoinRowCallbackHandler(new DatalayerfolderRowMapper(), mappers);
 		}
+
 
 }

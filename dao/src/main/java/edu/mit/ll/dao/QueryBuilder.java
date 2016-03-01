@@ -45,6 +45,7 @@ public final class QueryBuilder{
 	//must add space when concatentating
 	public static String WHERE = " where";
 	public static String LIKE = " like";
+	public static String I_LIKE = " ilike";
 	public static String AND = " and";
 	public static String SET = " set";
 	public static String OR = " or";
@@ -87,7 +88,9 @@ public final class QueryBuilder{
 	//Special Geometry insertion
 	public static String GEOMETRY = "geometry";
 	public static String SRS = "srs";
+	public static String TRANS = "trans";
 	public static String GEOMETRY_FUNCTION = "ST_GeomFromText";
+	public static String GEO_TRANSFORM_FUNCTION = "ST_Transform";
 	public static Integer SRS_PROJECTION = 3857;
 	
 	

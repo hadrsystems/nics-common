@@ -34,22 +34,18 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import edu.mit.ll.dao.QueryBuilder;
 import edu.mit.ll.dao.QueryModel;
 import edu.mit.ll.jdbc.JoinRowCallbackHandler;
 import edu.mit.ll.jdbc.JoinRowMapper;
 import edu.mit.ll.nics.common.entity.CurrentUserSession;
-import edu.mit.ll.nics.common.entity.IncidentType;
 import edu.mit.ll.nics.common.constants.SADisplayConstants;
 import edu.mit.ll.nics.nicsdao.GenericDAO;
 import edu.mit.ll.nics.nicsdao.QueryManager;
 import edu.mit.ll.nics.nicsdao.UserSessionDAO;
 import edu.mit.ll.nics.nicsdao.mappers.CurrentUserSessionRowMapper;
-import edu.mit.ll.nics.nicsdao.mappers.IncidentTypeRowMapper;
 import edu.mit.ll.nics.nicsdao.mappers.UserRowMapper;
 
 import org.slf4j.Logger;
@@ -258,11 +254,40 @@ public class UserSessionDAOImpl extends GenericDAO implements UserSessionDAO {
      * @param userId
      * @return The user's CurrentUserSession if it exists, null otherwise
      */
+    public CurrentUserSession getCurrentUserSession(long userId) {
+    	List<CurrentUserSession> sessions = null;
+    	
+    	MapSqlParameterSource paramMap = new MapSqlParameterSource(SADisplayConstants.USER_ID, userId);
+    	    	
+    	JoinRowCallbackHandler<CurrentUserSession> handler = getCurrentSessionHandlerWith();
+    	
+    	// TODO: may want to try getting a list of results, and choosing the latest
+    	// one, unless it's impossible to have 2 current user sessions... better to return
+    	// one than throw an exception?
+    	template.query("select * from currentusersession "
+    			+ "where userid=:userId order by loggedin desc", paramMap, handler);
+    	
+    	sessions = handler.getResults();
+    	
+    	if(sessions == null || sessions.isEmpty()) {
+    		return null;
+    	}
+    	
+    	return sessions.get(0);
+    }
+    
+    /**
+     * Gets the specified user's CurrentUserSession
+     * 
+     * @param workspaceId
+     * @param userId
+     * @return The user's CurrentUserSession if it exists, null otherwise
+     */
     public CurrentUserSession getCurrentUserSession(int workspaceId, int userId) {
     	List<CurrentUserSession> sessions = null;
     	
-    	MapSqlParameterSource paramMap = new MapSqlParameterSource(SADisplayConstants.WORKSPACE_ID, workspaceId)
-    		.addValue(SADisplayConstants.USER_ID, userId);
+    	MapSqlParameterSource paramMap = new MapSqlParameterSource(SADisplayConstants.USER_ID, userId)
+    		.addValue(SADisplayConstants.WORKSPACE_ID, workspaceId);
     	    	
     	JoinRowCallbackHandler<CurrentUserSession> handler = getCurrentSessionHandlerWith();
     	

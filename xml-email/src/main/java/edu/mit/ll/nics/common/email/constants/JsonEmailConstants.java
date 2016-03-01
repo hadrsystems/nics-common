@@ -27,32 +27,17 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package edu.mit.ll.nics.nicsdao;
+package edu.mit.ll.nics.common.email.constants;
 
-import java.util.List;
+/**
+ * Created by ch23050 on 1/9/16.
+ */
+public final class JsonEmailConstants
+{
+    public static final String TO = "to";
+    public static final String FROM = "from";
+    public static final String SUBJECT = "subject";
+    public static final String BODY = "body";
 
-import edu.mit.ll.nics.common.entity.datalayer.Datalayer;
-import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
-import edu.mit.ll.nics.common.entity.datalayer.Datasource;
-
-public interface DatalayerDAO extends BaseDAO {
-	public List<Datalayerfolder> getDatalayerFolders(String folderid);
-	public List<Datasource> getDatasources(String type);
-	public Datalayer reloadDatalayer(String datalayerid);
-	public int getDatasourceTypeId(String datasourcetype);
-	public String getDatasourceId(String internalurl);
-	public String getDatalayersourceId(String layername);
-	public String getUnofficialDatalayerId(String collabroom, String folderid);
-	public List<String> getAvailableStyles();
-	public Datalayerfolder getDatalayerfolder(String datalayerid, String folderid);
-	public Datalayerfolder getDatalayerfolder(int datalayerfolderId);
-	public int getNextDatalayerFolderId();
-	public String insertDataSource(Datasource source);
-	public String insertDataLayer(String dataSourceId, Datalayer datalayer);
-	public int insertDataLayerFolder(String folderId, String datalayerId, int folderIndex);
-	public Datasource getDatasource(String datasourceId);
-	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder);
-	public void decrementIndexes(String parentFolderId, int index);
-	public void incrementIndexes(String parentFolderId, int index);
-	public int getNextDatalayerFolderIndex(String folderid);
+    // TODO add attachments
 }

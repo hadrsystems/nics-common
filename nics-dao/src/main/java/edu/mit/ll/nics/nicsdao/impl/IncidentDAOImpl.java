@@ -32,6 +32,7 @@ package edu.mit.ll.nics.nicsdao.impl;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ import edu.mit.ll.nics.nicsdao.mappers.IncidentRowMapper;
 import edu.mit.ll.nics.nicsdao.mappers.IncidentTypeRowMapper;
 import edu.mit.ll.nics.nicsdao.mappers.Incident_IncidentTypeRowMapper;
 import edu.mit.ll.nics.common.entity.Incident;
+import edu.mit.ll.nics.common.entity.datalayer.Folder;
 
 public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 
@@ -211,6 +213,83 @@ public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 		return rows;
 	}
     
+    public Incident updateIncident(int workspaceId, Incident incident){
+    	
+    	Incident dbIncident = null;
+    	
+		try{
+
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
+					.update().equals(SADisplayConstants.INCIDENT_NAME).comma().equals(SADisplayConstants.DESCRIPTION)
+	    			.comma().equals(SADisplayConstants.PARENT_INCIDENT_ID).comma().equals(SADisplayConstants.LATITUDE)
+	    			.comma().equals(SADisplayConstants.LONGITUDE).where().equals(SADisplayConstants.INCIDENT_ID).returnValue("*");
+
+			MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.INCIDENT_ID,incident.getIncidentid());
+			map.addValue(SADisplayConstants.INCIDENT_NAME, incident.getIncidentname());
+			map.addValue(SADisplayConstants.DESCRIPTION, incident.getDescription());
+			map.addValue(SADisplayConstants.PARENT_INCIDENT_ID, incident.getParentincidentid());
+			map.addValue(SADisplayConstants.LATITUDE, incident.getLat());
+			map.addValue(SADisplayConstants.LONGITUDE, incident.getLon());
+			
+			
+			JoinRowCallbackHandler<Incident> handler = getIncidentHandlerWith();
+			
+			this.template.query(queryModel.toString(), map, handler);
+			
+			dbIncident = handler.getSingleResult();
+			
+		}
+		catch(Exception e){
+			log.info("Failed to update incident #0", incident.getIncidentname());
+			return null;
+		}
+		
+		//need to delete/update incidenttypes
+		
+		try{
+			
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_INCIDENTTYPE_TABLE)
+					.deleteFromTableWhere().equals(SADisplayConstants.INCIDENT_ID);
+			
+			this.template.update(queryModel.toString(), new MapSqlParameterSource(SADisplayConstants.INCIDENT_ID,incident.getIncidentid()));
+			
+			
+			
+		}catch(Exception e){
+			log.info("Failed to delete incident types for incident #0", incident.getIncidentname());
+			return null;
+		}
+		
+		
+		try{
+		
+			for(IncidentIncidentType type: incident.getIncidentIncidenttypes()){
+				
+				ArrayList<String> fields = new ArrayList<String>();
+				fields.add(SADisplayConstants.INCIDENT_ID);
+				fields.add(SADisplayConstants.INCIDENT_TYPE_ID);
+								
+				QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_INCIDENTTYPE_TABLE)
+						.insertInto(fields, SADisplayConstants.INCIDENT_INCIDENTTYPE_ID);
+				
+				MapSqlParameterSource map = new MapSqlParameterSource();
+				map.addValue(SADisplayConstants.INCIDENT_ID, incident.getIncidentid());
+				map.addValue(SADisplayConstants.INCIDENT_TYPE_ID,type.getIncidenttypeid());
+
+				this.template.update(queryModel.toString(),map);
+
+			}
+			
+			return dbIncident;
+		}
+		catch(Exception e){
+			log.info("Failed to update incident_incidenttypes for incident #0",incident.getIncidentname());
+			
+		}
+		
+		return null;
+    }
+    
     public int getIncidentId(String name){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
     			.selectFromTableWhere(SADisplayConstants.INCIDENT_ID)
@@ -260,6 +339,25 @@ public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 	         new MapSqlParameterSource(SADisplayConstants.ACTIVE, true)
 	    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId), handler);
     	return handler.getResults();
+    }
+    
+    /** getIncidentsAndChildren - return all active incidents and there children
+   	 *  @return List<Incident> 
+   	 */
+    public List<Incident> getIncidentsTree(int workspaceId) {
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE).selectAllFromTable()
+    			.left().join(SADisplayConstants.INCIDENT_INCIDENTTYPE_TABLE).using(SADisplayConstants.INCIDENT_ID)
+    			.left().join(SADisplayConstants.INCIDENT_TYPE_TABLE).using(SADisplayConstants.INCIDENT_TYPE_ID)
+    			.where().equals(SADisplayConstants.ACTIVE)
+    			.and().equals(SADisplayConstants.WORKSPACE_ID).and().isNull(SADisplayConstants.PARENT_INCIDENT_ID)
+    			.orderBy(SADisplayConstants.CREATED).desc();
+    	
+    	JoinRowCallbackHandler<Incident> handler = getIncidentHandlerWith(new Incident_IncidentTypeRowMapper().attachAdditionalMapper(new IncidentTypeRowMapper()));
+	    template.query(queryModel.toString(), 
+	         new MapSqlParameterSource(SADisplayConstants.ACTIVE, true)
+	    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId), handler);
+    	return getIncidentsTree( workspaceId, handler.getResults());
     }
     
     /** getIncidents - return all active incidents
@@ -531,6 +629,45 @@ public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 		return count;
 	}
 	 
+ 	/** getIncidentsTree
+	 *  @param parents
+	 *  @return Setr<Incident>
+	 */
+	
+	private List<Incident> getIncidentsTree(int workspaceId, List<Incident> parents) {
+		
+		List<Incident> incidents = new ArrayList<Incident>();
+		
+		for(int i = 0; i < parents.size(); i ++){
+		
+			Incident newIncident = parents.get(i);
+			
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE).selectAllFromTable()
+	    			.left().join(SADisplayConstants.INCIDENT_INCIDENTTYPE_TABLE).using(SADisplayConstants.INCIDENT_ID)
+	    			.left().join(SADisplayConstants.INCIDENT_TYPE_TABLE).using(SADisplayConstants.INCIDENT_TYPE_ID)
+	    			.where().equals(SADisplayConstants.ACTIVE)
+	    			.and().equals(SADisplayConstants.WORKSPACE_ID).and().equals(SADisplayConstants.PARENT_INCIDENT_ID)
+	    			.orderBy(SADisplayConstants.CREATED).desc();
+	    	
+	    	JoinRowCallbackHandler<Incident> handler = getIncidentHandlerWith(new Incident_IncidentTypeRowMapper().attachAdditionalMapper(new IncidentTypeRowMapper()));
+		    template.query(queryModel.toString(), 
+		         new MapSqlParameterSource(SADisplayConstants.ACTIVE, true)
+		    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId).addValue(SADisplayConstants.PARENT_INCIDENT_ID, parents.get(i).getIncidentid()), handler);
+			
+		    List<Incident> currentChildren = handler.getResults();
+		    
+			if(currentChildren.size() > 0){
+				getIncidentsTree(workspaceId,currentChildren);
+				newIncident.setChildren(currentChildren);
+				newIncident.setLeaf(false);
+			}
+			
+			incidents.add(newIncident);
+		}
+		
+		return incidents;
+	}
+
 	 
     /** getHandlerWith
 	 *  @param mappers - optional additional mappers

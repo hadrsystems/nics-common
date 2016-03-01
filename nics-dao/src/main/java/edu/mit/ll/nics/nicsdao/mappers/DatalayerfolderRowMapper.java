@@ -46,6 +46,7 @@ public class DatalayerfolderRowMapper extends JoinRowMapper<Datalayerfolder> {
     public Datalayerfolder createRowObject(ResultSet rs, int rowNum) throws SQLException {
         Datalayerfolder datalayerfolder = new Datalayerfolder();
         datalayerfolder.setDatalayerfolderid(rs.getInt(SADisplayConstants.DATALAYER_FOLDER_ID));
+        datalayerfolder.setDatalayerid(rs.getString(SADisplayConstants.DATALAYER_ID));
         datalayerfolder.setFolderid(rs.getString(SADisplayConstants.FOLDER_ID));
         datalayerfolder.setIndex(rs.getInt(SADisplayConstants.INDEX));
         return datalayerfolder;

@@ -44,7 +44,7 @@ public interface FeatureDAO extends BaseDAO {
 	public List<Feature> getFeatureState(int collabroomid, UTCRange dateRange, int geoType);
 	public List<Feature> getUserFeatureState(int userid);
 	public Feature getFeature(long featureId);
-	public long addFeature(JSONObject feature, List<String> fields) throws Exception;
+	public long addFeature(JSONObject feature, List<String> fields, int geoType) throws Exception;
 	public void addCollabroomFeature(CollabroomFeature collabroomFeature) throws Exception;
 	public void addUserFeature(UserFeature userFeature) throws Exception;
 	public int setCollabroomFeatureDeleted(long featureId, boolean deleted) throws Exception;

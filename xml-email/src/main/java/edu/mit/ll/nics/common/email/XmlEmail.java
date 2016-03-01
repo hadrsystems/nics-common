@@ -65,8 +65,10 @@ public class XmlEmail {
      * Default destination url
      * rabbitmq topic on the
      * amqp bus on local machine
+     *
+     * OLD: "rabbitmq://localhost:5672?amqExchange=amq.topic&amqExchangeType=topic&requestedHeartbeat=0&routingKey=LDDRS.alert.email&noAck=false&user=guest&password=guest&msgPersistent=false&msgContentType=text"
      */
-    private String defDstUrl =  "rabbitmq://localhost:5672?amqExchange=amq.topic&amqExchangeType=topic&requestedHeartbeat=0&routingKey=LDDRS.alert.email&noAck=false&user=guest&password=guest&msgPersistent=false&msgContentType=text";
+    private String defDstUrl =  "rabbitmq://localhost:5672/iweb.amq.topic?exchangeType=topic&requestedHeartbeat=0&routingKey=iweb.alert.email&autoAck=false&user=guest&password=guest";
     private ObjectFactory of = null;
     private EmailType et = null;
     private Marshaller marsh = null;
@@ -138,7 +140,7 @@ public class XmlEmail {
 
     /**
      * Puts the addresses in string bcc on the bcc address list
-     * @param cc
+     * @param bcc
      */
     public void setBCC(final String bcc) {
         head.setBcc(bcc);
@@ -190,7 +192,7 @@ public class XmlEmail {
     /**
      * send method marshalls the jaxb object into an xml message and sends it to
      * the dstUrl (topic/room with e-mail consumer)
-     * @param dstUrl
+     * @param url
      */
     public void send(String url) {
         dstUrl = url;

@@ -37,6 +37,7 @@ import edu.mit.ll.dao.QueryBuilder;
 import edu.mit.ll.dao.QueryModel;
 import edu.mit.ll.jdbc.JoinRowCallbackHandler;
 import edu.mit.ll.jdbc.JoinRowMapper;
+import edu.mit.ll.nics.common.entity.SystemRole;
 import edu.mit.ll.nics.common.entity.UserOrg;
 import edu.mit.ll.nics.common.constants.SADisplayConstants;
 import edu.mit.ll.nics.nicsdao.GenericDAO;
@@ -50,6 +51,8 @@ import edu.mit.ll.nics.nicsdao.mappers.OrgRowMapper;
 import edu.mit.ll.nics.nicsdao.mappers.SystemRoleRowMapper;
 import edu.mit.ll.nics.nicsdao.mappers.UserOrgRowMapper;
 import edu.mit.ll.nics.nicsdao.mappers.UserRowMapper;
+
+
 
 
 
@@ -81,7 +84,7 @@ public class UserOrgDAOImpl extends GenericDAO implements UserOrgDAO {
      * @param int userId
    	 * @return UserOrg
    	 */
-    public UserOrg getUserOrgById(int orgId, int userId, int workspaceId){
+    public UserOrg getUserOrgById(int orgId, long userId, int workspaceId){
     	
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ORG_TABLE)
     			.selectAllFromTable().join(SADisplayConstants.ORG_TABLE).using(SADisplayConstants.ORG_ID)
@@ -128,17 +131,18 @@ public class UserOrgDAOImpl extends GenericDAO implements UserOrgDAO {
         return null;
     }
     
-    public void updateUserOrg(int userOrgId, String jobTitle, String rank, String jobDesc){
+    public void updateUserOrg(int userOrgId, String jobTitle, String rank, String jobDesc, int sysRoleId){
     
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ORG_TABLE)
     			.update().equals(SADisplayConstants.JOB_TITLE).comma().equals(SADisplayConstants.RANK)
-    			.comma().equals(SADisplayConstants.DESCRIPTION)
+    			.comma().equals(SADisplayConstants.DESCRIPTION).comma().equals(SADisplayConstants.SYSTEM_ROLE_ID)
     			.where().equals(SADisplayConstants.USER_ORG_ID);
     	
     	MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.USER_ORG_ID, userOrgId);
 		map.addValue(SADisplayConstants.JOB_TITLE, jobTitle);
 		map.addValue(SADisplayConstants.RANK, rank);
 		map.addValue(SADisplayConstants.DESCRIPTION, jobDesc);
+		map.addValue(SADisplayConstants.SYSTEM_ROLE_ID, sysRoleId);
 		
     	try{
     		this.template.update(queryModel.toString(), map);
@@ -197,7 +201,7 @@ public class UserOrgDAOImpl extends GenericDAO implements UserOrgDAO {
         return null;
     }
     
-    public boolean hasEnabledOrgs(int userid, int workspaceid){
+    public int hasEnabledOrgs(int userid, int workspaceid){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ORG_WORKSPACE_TABLE)
     			.selectFromTable(SADisplayConstants.USER_ORG_WORKSPACE_ID)
     			.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ORG_ID)
@@ -211,13 +215,13 @@ public class UserOrgDAOImpl extends GenericDAO implements UserOrgDAO {
 	    				.addValue(SADisplayConstants.WORKSPACE_ID, workspaceid)
 	    				.addValue(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true), Integer.class);
 	    	
-	    	if(workspaceids != null && workspaceids.size()>0){
-	    		return true;
+	    	if(workspaceids != null){
+	    		return workspaceids.size();
 	    	}
     	}catch(Exception e){
     		log.info("Could not find userorgs for userid #0 in workspace #1", userid, workspaceid);
     	}
-    	return false;
+    	return 0;
     }
     
     public List<Map<String, Object>> getEnabledUserOrgs(int orgid, int workspaceId){
@@ -281,6 +285,56 @@ public class UserOrgDAOImpl extends GenericDAO implements UserOrgDAO {
 		
 		return template.queryForList(queryModel.toString(), map);
 	}
+    
+    public boolean isUserRole(String username, int roleId){
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ORG_TABLE)
+    			.selectFromTable(SADisplayConstants.USER_ORG_ID)
+    			.join(SADisplayConstants.USER_TABLE).using(SADisplayConstants.USER_ID)
+    			.join(SADisplayConstants.USER_ORG_WORKSPACE_TABLE).using(SADisplayConstants.USER_ORG_ID)
+    			.where().equals(SADisplayConstants.SYSTEM_ROLE_ID)
+    			.and().equals(SADisplayConstants.USER_NAME)
+    			.and().equals(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED);
+    	
+    	try{
+	    	List<Integer> ids = template.queryForList(queryModel.toString(), 
+	    			new MapSqlParameterSource(SADisplayConstants.SYSTEM_ROLE_ID, roleId)
+	    			.addValue(SADisplayConstants.USER_NAME,  username)
+	    			.addValue(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true), Integer.class);
+	    	
+	    	return (ids.size() > 0);
+    	}catch(Exception e){
+    		log.info("Could not verify #0 as a SUPER user.", username);
+    	}
+    	return false;
+    }
+    
+    public List<SystemRole> getSystemRoles(){
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.SYSTEM_ROLE_TABLE)
+    			.selectAllFromTable();
+		
+		JoinRowCallbackHandler<SystemRole> handler = getSystemRoleHandlerWith();
+        template.query(queryModel.toString(), new MapSqlParameterSource(), handler);
+        return handler.getResults();
+    }
+    
+    public List<Integer> getSuperUsers(){
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_TABLE)
+    			.selectDistinctFromTable(SADisplayConstants.USER_ID)
+				.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ID)
+				.join(SADisplayConstants.USER_ORG_WORKSPACE_TABLE).using(SADisplayConstants.USER_ORG_ID)
+				.where().equals(SADisplayConstants.ACTIVE)
+				.and().equals(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED)
+				.and().equals(SADisplayConstants.USER_ENABLED, SADisplayConstants.USER_ENABLED_PARAM, null)
+				.and().equals(SADisplayConstants.SYSTEM_ROLE_ID);
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put(SADisplayConstants.SYSTEM_ROLE_ID, SADisplayConstants.SUPER_ROLE_ID);
+        params.put(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true);
+        params.put(SADisplayConstants.ACTIVE, true);
+        params.put(SADisplayConstants.USER_ENABLED_PARAM, true);
+		
+		return this.template.queryForList(queryModel.toString(), params, Integer.class);
+    }
     
     public int setUserOrgEnabled(int userOrgWorkspaceId, boolean enabled){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ORG_WORKSPACE_TABLE)
@@ -376,4 +430,13 @@ public class UserOrgDAOImpl extends GenericDAO implements UserOrgDAO {
     private JoinRowCallbackHandler<UserOrg> getHandlerWith(JoinRowMapper... mappers) {
     	 return new JoinRowCallbackHandler(new UserOrgRowMapper(), mappers);
     }
+    
+    /** getHandlerWith
+	   *  @param mappers - optional additional mappers
+	   *  @return JoinRowCallbackHandler<UserOrg>
+	   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private JoinRowCallbackHandler<SystemRole> getSystemRoleHandlerWith(JoinRowMapper... mappers) {
+  	 return new JoinRowCallbackHandler(new SystemRoleRowMapper(), mappers);
+  }
 }
