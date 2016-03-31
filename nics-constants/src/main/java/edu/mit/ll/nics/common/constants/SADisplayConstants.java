@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -341,4 +341,5 @@ public final class SADisplayConstants {
 	public static final String LEGEND = "legend";
     public static final String UXOREPORT_LOCATION = "location";
     public static final String UXOREPORTID = "uxoreportid";
+	public static final String INCIDENT_MAP = "Incident Map";
 }

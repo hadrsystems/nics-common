@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,9 @@ public interface UserDAO extends BaseDAO {
 	public int getNextUserId();
 	public int getContactTypeId(String type);
 	public List<Contact> getContacts(String username, String type);
+	public List<Contact> getAllUserContacts(String username);
+	public boolean addContact(String username, int contactTypeId, String value);
+	public boolean deleteContact(String username, int contactTypeId, String value);
 	public List<User> getUsersNotInOrg(int notInOrgId); 
 	public Contact getContact(String value);
 	public boolean requiresPasswordChange(int userid, int days);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,24 +27,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*
-* ===================================================================*
-*                                                                    *
-*    (c) Copyright, 2008-2012 Massachusetts Institute of Technology. *
-*        This material may be reproduced by or for the               *
-*        U.S. Government pursuant to the copyright license           *
-*        under the clause at DFARS 252.227-7013 (June, 1995).        *
-*                                                                    *
-*    WARNING: This material may contain technical data whose export  *
-*    is restricted by the Arms Export Control Act (AECA) or the      *
-*    Export Administration Act (EAA). Transfer of this data by       *
-*    any means to a non-U.S. person who is not eligible to obtain    *
-*    export-controlled data is prohibited. By accepting this data,   *
-*    the consignee agrees to honor the requirements of the           *
-*    AECA and EAA.                                                   *
-*                                                                    *
-* ===================================================================*
-*/
 /**
  * 
  */

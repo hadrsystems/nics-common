@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -842,6 +842,106 @@ public class UserDAOImpl extends GenericDAO implements UserDAO {
 			handler);
 		
 		return handler.getResults();
+	}
+	
+	public List<Contact> getAllUserContacts(String username){
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.CONTACT_TABLE)
+				.selectAllFromTable()
+				.join(SADisplayConstants.USER_ESCAPED).using(SADisplayConstants.USER_ID)
+				.where().equals(SADisplayConstants.USER_NAME)
+				.and().equals(SADisplayConstants.CONTACT_ENABLED);
+		
+		JoinRowCallbackHandler<Contact> handler = getContactHandlerWith();
+		
+		this.template.query(queryModel.toString(), 
+			new MapSqlParameterSource(SADisplayConstants.USER_NAME, username)
+			.addValue(SADisplayConstants.CONTACT_ENABLED, true),
+			handler);
+		
+		return handler.getResults();
+	}
+	
+	public boolean addContact(String username, int contactTypeId, String value){
+		
+		int userId = -1;
+		int contactId = -1;
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+				.selectFromTable(SADisplayConstants.USER_ID)
+				.where().equals(SADisplayConstants.USER_NAME);
+		
+		userId = this.template.queryForObject(queryModel.toString(), 
+				new MapSqlParameterSource(SADisplayConstants.USER_NAME, username), Integer.class);
+		
+		QueryModel idModel = QueryManager.createQuery("contact_seq").selectNextVal();
+		contactId = this.template.queryForObject(idModel.toString(), new MapSqlParameterSource(), Integer.class);
+		
+		if(userId == -1){
+			return false;
+		}
+		
+		ArrayList<String> fields = new ArrayList<String>();
+		fields.add(SADisplayConstants.CONTACT_ID);
+		fields.add(SADisplayConstants.USER_ID);
+		fields.add(SADisplayConstants.CONTACT_TYPE_ID);
+		fields.add(SADisplayConstants.ENABLED);
+		fields.add(SADisplayConstants.VALUE);
+		
+		
+		queryModel = QueryManager.createQuery(SADisplayConstants.CONTACT_TABLE)
+				.insertInto(fields);
+		
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue(SADisplayConstants.CONTACT_ID, contactId);
+		map.addValue(SADisplayConstants.USER_ID, userId);
+		map.addValue(SADisplayConstants.CONTACT_TYPE_ID, contactTypeId);
+		map.addValue(SADisplayConstants.ENABLED, true);
+		map.addValue(SADisplayConstants.VALUE, value);
+		
+		System.out.println(queryModel.toString());
+		
+		int updated = this.template.update(queryModel.toString(), map);
+		
+		if(updated == 0){
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public boolean deleteContact(String username, int contactTypeId, String value){
+		
+		int userId = -1;
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
+				.selectFromTable(SADisplayConstants.USER_ID)
+				.where().equals(SADisplayConstants.USER_NAME);
+		
+		userId = this.template.queryForObject(queryModel.toString(), 
+				new MapSqlParameterSource(SADisplayConstants.USER_NAME, username), Integer.class);
+		
+		if(userId == -1){
+			return false;
+		}
+		
+		queryModel = QueryManager.createQuery(SADisplayConstants.CONTACT_TABLE)
+				.deleteFromTableWhere().equals(SADisplayConstants.USER_ID)
+				.and().equals(SADisplayConstants.CONTACT_TYPE_ID).and()
+				.equals(SADisplayConstants.VALUE);
+		
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue(SADisplayConstants.USER_ID, userId);
+		map.addValue(SADisplayConstants.CONTACT_TYPE_ID, contactTypeId);
+		map.addValue(SADisplayConstants.VALUE, value);
+		
+		try{
+			this.template.update(queryModel.toString(), map);
+			
+		}catch(DataAccessException e){
+			return false;
+		}
+		
+		return true;
 	}
 	
 	public String getUsernameFromEmail(String emailAddress){

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -58,7 +59,7 @@ import edu.mit.ll.nics.nicsdao.mappers.DatasourcetypeRowMapper;
 
 public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 
-	private Logger log;
+	private Logger log = LoggerFactory.getLogger(DatalayerDAOImpl.class);
 
     private NamedParameterJdbcTemplate template;
 
@@ -290,6 +291,7 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 		srcMap.addValue(SADisplayConstants.IMAGE_FORMAT, source.getImageformat());
 		srcMap.addValue(SADisplayConstants.LAYERNAME, source.getLayername());
 		srcMap.addValue(SADisplayConstants.CREATED, source.getCreated());
+		srcMap.addValue(SADisplayConstants.ATTRIBUTES, source.getAttributes());
 		srcMap.addValue(SADisplayConstants.USERSESSION_ID, datalayer.getUsersessionid());
 		
 		QueryModel srcQueryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_SOURCE_TABLE)

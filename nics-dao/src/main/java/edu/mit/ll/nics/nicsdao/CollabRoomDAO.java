@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@ public interface CollabRoomDAO extends BaseDAO {
 	public boolean hasRoomNamed(String text);
 	public List<CollabRoom> updateCollabrooms(String currentIncident, int currentIncidentId);
 	public boolean hasPermissions(long userid, long collabroomid);
+	public boolean hasPermissions(long userid, long collabroomid, boolean includeIncidentMap);
 	public int create(CollabRoom collabroom);
 	public int getCollabRoomId(String name);
 	public int getCollabRoomId(String name, int workspaceId);

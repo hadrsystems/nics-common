@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2015, Massachusetts Institute of Technology (MIT)
+ * Copyright (c) 2008-2016, Massachusetts Institute of Technology (MIT)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -259,6 +259,22 @@ private static Logger log;
 		return handler.getResults();
 	}
 	
+	public boolean isIncidentMap(long collabroomId){
+		QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_TABLE)
+				.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
+				.equals(SADisplayConstants.COLLAB_ROOM_NAME)
+				.and().equals(SADisplayConstants.COLLAB_ROOM_ID);
+		try{
+			this.template.queryForObject(query.toString(), 
+					new MapSqlParameterSource(SADisplayConstants.COLLAB_ROOM_ID, collabroomId)
+					.addValue(SADisplayConstants.COLLAB_ROOM_NAME, SADisplayConstants.INCIDENT_MAP),
+					Integer.class);
+		}catch(Exception e){
+			return false;
+		}
+		return true;
+	}
+	
 	public boolean isSecure(long collabroomId){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
 				.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
@@ -273,7 +289,11 @@ private static Logger log;
 		return true;
 	}
 	
-	public boolean hasPermissions(long userId, long collabroomId){
+	public boolean hasPermissions(long userId, long collabroomId, boolean includeIncidentMap){
+		if(includeIncidentMap && this.isIncidentMap(collabroomId)){
+			return true;
+		}
+		
 		if(this.isSecure(collabroomId)){
 			QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
 					.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
@@ -291,6 +311,10 @@ private static Logger log;
 		}else{
 			return true;
 		}
+	}
+	
+	public boolean hasPermissions(long userId, long collabroomId){
+		return this.hasPermissions(userId, collabroomId, true);
 	}
 	
 	public int create(CollabRoom collabroom){
@@ -328,7 +352,7 @@ private static Logger log;
 			//Get all protected rooms that the user has access to
 			//secureRoomsWithPermissions = em.createQuery(
 			String sqlSecureRooms =	"SELECT DISTINCT on (cr.collabroomid) cr.* FROM collabroom cr, CollabroomPermission cp where cr.incidentid=:incidentId" +
-			        " and ((cp.userId=:userId AND cp.collabRoomId=cr.collabRoomId) or cr.name like '%-IncidentMap%')"; //)
+			        " and ((cp.userId=:userId AND cp.collabRoomId=cr.collabRoomId) or cr.name like '%" + SADisplayConstants.INCIDENT_MAP + "%')"; //)
 			MapSqlParameterSource params = new MapSqlParameterSource();
 			params.addValue(SADisplayConstants.USER_ID, userId);
 			params.addValue(SADisplayConstants.INCIDENT_ID, incidentId);
@@ -376,9 +400,11 @@ private static Logger log;
 			//Get all of the open rooms
 			//unsecuredRooms = em.createQuery(
 			String sqlUnsecuredRooms ="SELECT DISTINCT on (cr.collabroomid) cr.* FROM CollabRoom cr where cr.incidentid=:incidentId" + 
+					" and name <> '" + SADisplayConstants.INCIDENT_MAP + "'" +
 					" and cr.collabRoomId not in " +
 					"(SELECT DISTINCT cr.collabRoomId FROM CollabRoom cr, CollabroomPermission cp where  "
-					+ "cr.collabRoomId=cp.collabRoomId and " + "incidentid=:incidentId)"; //)
+					+ "cr.collabRoomId=cp.collabRoomId and " + "incidentid=:incidentId and "
+							+ "name <>'" + SADisplayConstants.INCIDENT_MAP + "')"; //)
 			
 			JoinRowCallbackHandler<CollabRoom> unsecuredHandler = getHandlerWith();//new CollabRoomRowMapper());
 			template.query(sqlUnsecuredRooms, 
