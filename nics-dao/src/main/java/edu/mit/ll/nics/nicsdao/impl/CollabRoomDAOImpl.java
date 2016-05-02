@@ -69,9 +69,6 @@ private static Logger log;
     @Override
     public void initialize() {
     	log = LoggerFactory.getLogger(CollabRoomDAOImpl.class);
-    	System.out.println("Initializing CollabRoom DAO....");
-    	System.out.println("DATASOURCE: " + datasource);
-    	
         this.template = new NamedParameterJdbcTemplate(datasource);
     }
 
@@ -259,7 +256,7 @@ private static Logger log;
 		return handler.getResults();
 	}
 	
-	public boolean isIncidentMap(long collabroomId){
+	public boolean isIncidentMap(long collabroomId, String incidentMap){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_TABLE)
 				.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
 				.equals(SADisplayConstants.COLLAB_ROOM_NAME)
@@ -267,7 +264,7 @@ private static Logger log;
 		try{
 			this.template.queryForObject(query.toString(), 
 					new MapSqlParameterSource(SADisplayConstants.COLLAB_ROOM_ID, collabroomId)
-					.addValue(SADisplayConstants.COLLAB_ROOM_NAME, SADisplayConstants.INCIDENT_MAP),
+					.addValue(SADisplayConstants.COLLAB_ROOM_NAME, incidentMap),
 					Integer.class);
 		}catch(Exception e){
 			return false;
@@ -289,8 +286,12 @@ private static Logger log;
 		return true;
 	}
 	
-	public boolean hasPermissions(long userId, long collabroomId, boolean includeIncidentMap){
-		if(includeIncidentMap && this.isIncidentMap(collabroomId)){
+	public boolean hasPermissions(long userId, long collabroomId){
+		return this.hasPermissions(userId, collabroomId, null);
+	}
+	
+	public boolean hasPermissions(long userId, long collabroomId, String incidentMap){
+		if(incidentMap != null && this.isIncidentMap(collabroomId, incidentMap)){
 			return true;
 		}
 		
@@ -311,10 +312,6 @@ private static Logger log;
 		}else{
 			return true;
 		}
-	}
-	
-	public boolean hasPermissions(long userId, long collabroomId){
-		return this.hasPermissions(userId, collabroomId, true);
 	}
 	
 	public int create(CollabRoom collabroom){
@@ -347,12 +344,12 @@ private static Logger log;
 		return -1;
 	}
 	
-	public List<CollabRoom> getSecuredRooms(int userId, int incidentId) throws DataAccessException, Exception {
+	public List<CollabRoom> getSecuredRooms(int userId, int incidentId, String incidentMap) throws DataAccessException, Exception {
 		try {
 			//Get all protected rooms that the user has access to
 			//secureRoomsWithPermissions = em.createQuery(
 			String sqlSecureRooms =	"SELECT DISTINCT on (cr.collabroomid) cr.* FROM collabroom cr, CollabroomPermission cp where cr.incidentid=:incidentId" +
-			        " and ((cp.userId=:userId AND cp.collabRoomId=cr.collabRoomId) or cr.name like '%" + SADisplayConstants.INCIDENT_MAP + "%')"; //)
+			        " and ((cp.userId=:userId AND cp.collabRoomId=cr.collabRoomId) or cr.name like '%" + incidentMap + "%')"; //)
 			MapSqlParameterSource params = new MapSqlParameterSource();
 			params.addValue(SADisplayConstants.USER_ID, userId);
 			params.addValue(SADisplayConstants.INCIDENT_ID, incidentId);
@@ -395,16 +392,16 @@ private static Logger log;
 	 * @return
 	 * @throws DataAccessException
 	 */
-	public List<CollabRoom> getAccessibleCollabRooms(long userId, int incidentId) throws DataAccessException, Exception {
+	public List<CollabRoom> getAccessibleCollabRooms(long userId, int incidentId, String incidentMap) throws DataAccessException, Exception {
 		try {
 			//Get all of the open rooms
 			//unsecuredRooms = em.createQuery(
 			String sqlUnsecuredRooms ="SELECT DISTINCT on (cr.collabroomid) cr.* FROM CollabRoom cr where cr.incidentid=:incidentId" + 
-					" and name <> '" + SADisplayConstants.INCIDENT_MAP + "'" +
+					" and name <> '" + incidentMap + "'" +
 					" and cr.collabRoomId not in " +
 					"(SELECT DISTINCT cr.collabRoomId FROM CollabRoom cr, CollabroomPermission cp where  "
 					+ "cr.collabRoomId=cp.collabRoomId and " + "incidentid=:incidentId and "
-							+ "name <>'" + SADisplayConstants.INCIDENT_MAP + "')"; //)
+							+ "name <>'" + incidentMap + "') order by cr.collabroomid"; //)
 			
 			JoinRowCallbackHandler<CollabRoom> unsecuredHandler = getHandlerWith();//new CollabRoomRowMapper());
 			template.query(sqlUnsecuredRooms, 

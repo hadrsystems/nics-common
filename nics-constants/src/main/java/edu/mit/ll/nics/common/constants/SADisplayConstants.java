@@ -70,6 +70,7 @@ public final class SADisplayConstants {
 	public static final String ORG_ORGTYPE_ID = "org_orgtypeid";
 	public static final String ORG_TYPE_TABLE = "OrgType";
 	public static final String FEATURE = "Feature";
+	public static final String FEATURE_TABLE = "feature";
 	public static final String ROOT_FOLDER_TABLE = "Rootfolder";	
 	public static final String FOLDER_TABLE = "Folder";
 	public static final String CONTACT_TYPE_TABLE = "ContactType";
@@ -342,4 +343,6 @@ public final class SADisplayConstants {
     public static final String UXOREPORT_LOCATION = "location";
     public static final String UXOREPORTID = "uxoreportid";
 	public static final String INCIDENT_MAP = "Incident Map";
+	public static final String PASSWORD = "password";
+	public static final String INCIDENT_CREATED = "incident.created";
 }

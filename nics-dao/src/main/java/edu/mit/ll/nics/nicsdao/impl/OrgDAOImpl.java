@@ -271,7 +271,8 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
     	
     	//Search for Orgs associated with Org Types
 		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
-				.selectAllFromTable().join(SADisplayConstants.ORG_ORGTYPE_TABLE).using(SADisplayConstants.ORG_ID);
+				.selectAllFromTable().join(SADisplayConstants.ORG_ORGTYPE_TABLE).using(SADisplayConstants.ORG_ID)
+				.orderBy(SADisplayConstants.ORG_NAME);
 		
 		JoinRowCallbackHandler<Org> handler = getHandlerWith(new OrgOrgTypeRowMapper());
 		this.template.query(queryModel.toString(), new MapSqlParameterSource(), handler);

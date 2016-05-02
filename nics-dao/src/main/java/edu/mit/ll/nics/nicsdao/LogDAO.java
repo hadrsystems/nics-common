@@ -31,30 +31,10 @@ package edu.mit.ll.nics.nicsdao;
 
 import java.util.List;
 
-import org.json.JSONObject;
+import edu.mit.ll.nics.common.entity.Log;
 
-import edu.mit.ll.nics.common.entity.CollabroomFeature;
-import edu.mit.ll.nics.common.entity.Feature;
-import edu.mit.ll.nics.common.entity.UserFeature;
-import edu.mit.ll.nics.nicsdao.query.QueryConstraint.UTCRange;
-
-
-public interface FeatureDAO extends BaseDAO {
-	public List<Feature> getFeatureState(int collabroomid, UTCRange dateRange, int geoType);
-	public List<Feature> getUserFeatureState(int userid);
-	public Feature getFeature(long featureId);
-	public long addFeature(JSONObject feature, List<String> fields, int geoType) throws Exception;
-	public void addCollabroomFeature(CollabroomFeature collabroomFeature) throws Exception;
-	public void addUserFeature(UserFeature userFeature) throws Exception;
-	public int setCollabroomFeatureDeleted(long featureId, boolean deleted) throws Exception;
-	public int setUserFeatureDeleted(long featureId, boolean deleted) throws Exception;
-	public int deleteUserFeature(long featureId) throws Exception;
-	public void updateFeature(long featureId, JSONObject properties) throws Exception;
-	public List<CollabroomFeature> getCollabroomFeatures(long featureId);
-	public List<Long> deleteSharedFeatures(int userId, int collabRoomId);
-	public List<Long> shareFeatures(int userId, int collabRoomId);
-	public List<Long> markSharedFeaturesDeleted(int userId, int collabRoomId);
-	public List<Long> getDeletedFeatures(int collabroomId, UTCRange dateRange);
-	public List<Long> copyFeatures(int userId, int collabRoomId);
-	public List<Feature> getFeatures(List<Long> featureIds);
+public interface LogDAO extends BaseDAO {
+	public List<Log> getLogs(int workspaceId, int logTypeId);
+	public boolean postLog(int workspaceId, Log log);
+	public boolean deleteLog(int logId);
 }

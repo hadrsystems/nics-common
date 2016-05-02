@@ -50,6 +50,10 @@ public class DatasourceRowMapper extends JoinRowMapper<Datasource> {
         source.setDisplayname(rs.getString(SADisplayConstants.DISPLAY_NAME));
         source.setExternalurl(rs.getString(SADisplayConstants.EXTERNAL_URL));
         source.setInternalurl(rs.getString(SADisplayConstants.INTERNAL_URL));
+        if(rs.getString(SADisplayConstants.USER_NAME) != null &&
+        		rs.getString(SADisplayConstants.PASSWORD) != null){
+        	source.setSecure(true);
+        }
         return source;
     }
     

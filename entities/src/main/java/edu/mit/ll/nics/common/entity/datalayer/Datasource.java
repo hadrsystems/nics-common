@@ -64,6 +64,9 @@ public class Datasource extends SADisplayMessageEntity implements SADisplayPersi
     private String internalurl;
     private String externalurl;
     private String displayname;
+    private String username;
+    private String password;
+    private boolean secure = false;
     private Set<Document> documents = new HashSet<Document>(0);
     private Set<Datalayersource> datalayersources = new HashSet<Datalayersource>(
             0);
@@ -157,6 +160,30 @@ public class Datasource extends SADisplayMessageEntity implements SADisplayPersi
 
     public void setDatasourcetypeid(Integer datasourcetypeid) {
         this.datasourcetypeid = datasourcetypeid;
+    }
+    
+    public void setUsername(String username){
+    	this.username = username;
+    }
+    
+    public String getUsername(){
+    	return this.username;
+    }
+    
+    public void setPassword(String password){
+    	this.password = password;
+    }
+    
+    public String getPassword(){
+    	return this.password;
+    }
+    
+    public boolean getSecure(){
+    	return this.secure;
+    }
+    
+    public void setSecure(boolean isSecure){
+    	this.secure = isSecure;
     }
 
     @Override

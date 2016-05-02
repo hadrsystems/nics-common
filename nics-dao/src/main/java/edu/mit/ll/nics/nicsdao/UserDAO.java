@@ -59,13 +59,14 @@ public interface UserDAO extends BaseDAO {
 	public int getContactTypeId(String type);
 	public List<Contact> getContacts(String username, String type);
 	public List<Contact> getAllUserContacts(String username);
-	public boolean addContact(String username, int contactTypeId, String value);
-	public boolean deleteContact(String username, int contactTypeId, String value);
+	public int addContact(String username, int contactTypeId, String value);
+	public boolean deleteContact(int contactId);
 	public List<User> getUsersNotInOrg(int notInOrgId); 
 	public Contact getContact(String value);
 	public boolean requiresPasswordChange(int userid, int days);
 	public String getUsernameFromEmail(String emailAddress);
 	public int setUserEnabled(int userId, boolean enabled);
+	public int setUserActive(int userId, boolean active);
 	public int isEnabled(String username);
 	public long getUserId(String username);
 }

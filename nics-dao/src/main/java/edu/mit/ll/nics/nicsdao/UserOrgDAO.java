@@ -32,6 +32,7 @@ package edu.mit.ll.nics.nicsdao;
 import java.util.List;
 import java.util.Map;
 
+import edu.mit.ll.nics.common.entity.SystemRole;
 import edu.mit.ll.nics.common.entity.User;
 import edu.mit.ll.nics.common.entity.UserOrg;
 
@@ -47,4 +48,9 @@ public interface UserOrgDAO extends BaseDAO {
 	public int setUserOrgEnabled(int userOrgWorkspaceId, boolean enabled);
 	public int getSystemRoleId(int userOrgId);
 	public int getSystemRoleId(String username, int userorgWorkspaceId);
+	public void updateUserOrg(int userOrgId, String jobTitle, String rank, String jobDesc, int sysRoleId);
+	public boolean isUserRole(String username, int roleId);
+	public List<SystemRole> getSystemRoles();
+	public List<Integer> getSuperUsers();
+	public int getSystemRoleIdForUserOrg(String username, int userOrgId);
 }

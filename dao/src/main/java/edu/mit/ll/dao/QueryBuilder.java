@@ -61,6 +61,8 @@ public final class QueryBuilder{
 	public static String LEFT = " left";
 	public static String LOWER = "lower";
 	public static String DEFAULT = "DEFAULT";
+	public static String WITH = "WITH";
+	public static String AS = "AS";
 	
 	//handle spacing
 	public static String LIMIT = " limit ";

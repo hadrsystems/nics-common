@@ -31,6 +31,7 @@ package edu.mit.ll.dao;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public class QueryModel{
 	}
 	
 	public QueryModel selectFromTable(List<String> fields){
-		query.append(QueryBuilder.selectFrom(table, this.buildList(fields, QueryBuilder.COMMA, ""), false));
+		query.append(QueryBuilder.selectFrom(table, this.buildList(fields, QueryBuilder.COMMA, null), false));
 		return this;
 	}
 	
@@ -125,6 +126,25 @@ public class QueryModel{
 		query.append(QueryBuilder.UPDATE).append(table).append(QueryBuilder.SET);
 		query.append(QueryBuilder.SPACE);
 		query.append(value);
+		return this;
+	}
+	
+	public QueryModel update(List<String> values){
+		query.append(QueryBuilder.UPDATE).append(table).append(QueryBuilder.SET);
+		query.append(QueryBuilder.SPACE);
+		
+		Iterator<String> itr = values.iterator();
+		
+		//Add first value
+		String value = itr.next();
+		query.append(QueryBuilder.addFieldCondition(value, value, QueryBuilder.EQUALS));
+		
+		//Append COMMA for subsequent values
+		while(itr.hasNext()){
+			String fieldValue = itr.next();
+			query.append(QueryBuilder.COMMA);
+			query.append(QueryBuilder.addFieldCondition(fieldValue, fieldValue, QueryBuilder.EQUALS));
+		}
 		return this;
 	}
 	
@@ -367,6 +387,16 @@ public class QueryModel{
 		return this;
 	}
 	
+	public QueryModel inAsLong(String column, List<Long> values){
+		query.append(QueryBuilder.SPACE);
+		query.append(column);
+		query.append(QueryBuilder.IN);
+		query.append(QueryBuilder.OPEN);
+		query.append(this.buildList(values, QueryBuilder.COMMA));
+		query.append(QueryBuilder.CLOSE);
+		return this;
+	}
+	
 	public QueryModel inAsString(String column, List<String> fields){
 		query.append(QueryBuilder.SPACE);
 		query.append(column);
@@ -470,6 +500,22 @@ public class QueryModel{
 		return this;
 	}
 	
+
+	public QueryModel with(String alias, QueryModel subQuery) {
+		query.append(QueryBuilder.WITH);
+		query.append(QueryBuilder.SPACE);
+		query.append(alias);
+		query.append(QueryBuilder.SPACE);
+		query.append(QueryBuilder.AS);
+		query.append(QueryBuilder.SPACE);
+		query.append(QueryBuilder.OPEN);
+		query.append(subQuery.toString());
+		query.append(QueryBuilder.CLOSE);
+		query.append(QueryBuilder.SPACE);
+		parameters.putAll(subQuery.getParameters());
+		return this;
+	}
+	
 	public Map<String, Object> getParameters(){
 		return this.parameters;
 	}
@@ -497,6 +543,19 @@ public class QueryModel{
 					result.append(preDelimiter);
 				}
 			}
+			result.append(field);
+		}
+		return result.toString();
+	}
+	
+	public String buildList(List<? extends Object> fields, String delimiter){
+		StringBuffer result = new StringBuffer();
+		//For multiple fields
+		for(Object field : fields){
+			if(result.length() != 0){
+				result.append(delimiter);
+			}
+			
 			result.append(field);
 		}
 		return result.toString();

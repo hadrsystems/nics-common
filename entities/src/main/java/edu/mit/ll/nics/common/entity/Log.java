@@ -68,6 +68,7 @@ public class Log extends SADisplayMessageEntity implements SADisplayPersistedEnt
 	private Date created;
 	private int logtypeid;
 	private int status;
+	private int workspaceid;
 
 	public Log() {
 	}
@@ -152,6 +153,14 @@ public class Log extends SADisplayMessageEntity implements SADisplayPersistedEnt
 
 	public void setStatus(int status) {
 		this.status = status;
+	}
+	
+	public int getWorkspaceid() {
+		return this.workspaceid;
+	}
+
+	public void setWorkspaceId(int workspaceid) {
+		this.workspaceid = workspaceid;
 	}
 
 	@Temporal(TemporalType.TIMESTAMP)

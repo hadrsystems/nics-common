@@ -290,6 +290,49 @@ public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 		return null;
     }
     
+    public boolean isAdmin(int workspaceId, int incidentId, String username){
+	    	try{
+	    		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ORG_TABLE)
+		  			 	 .selectFromTable(SADisplayConstants.SYSTEM_ROLE_ID)
+						 .join(SADisplayConstants.USER_ESCAPED).using(SADisplayConstants.USER_ID)
+						 .join(SADisplayConstants.USER_SESSION_TABLE).using(SADisplayConstants.USER_ORG_ID)
+						 .join(SADisplayConstants.INCIDENT_TABLE).using(SADisplayConstants.USERSESSION_ID)
+						 .where().equals(SADisplayConstants.WORKSPACE_ID)
+						 .and().equals(SADisplayConstants.USER_NAME)
+						 .and().equals(SADisplayConstants.INCIDENT_ID);
+		    	
+		    	int ret = this.template.queryForObject(queryModel.toString(), 
+		    			new MapSqlParameterSource(SADisplayConstants.WORKSPACE_ID, workspaceId)
+		    			.addValue(SADisplayConstants.USER_NAME, username)
+		    			.addValue(SADisplayConstants.INCIDENT_ID, incidentId), 
+		    			Integer.class);
+		    	
+		    	return (ret == SADisplayConstants.ADMIN_ROLE_ID);
+	    	}catch(Exception e){
+	    		return false;
+	    	}
+    }
+    
+    public List<Map<String, Object>> getIncidentOrg(int workspaceId){
+    	StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.INCIDENT_ID);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.ORG_ID);
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.ORG_TABLE)
+   			 	 .selectFromTable(fields.toString())
+				 .join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.ORG_ID)
+				 .join(SADisplayConstants.USER_SESSION_TABLE).using(SADisplayConstants.USER_ORG_ID)
+				 .join(SADisplayConstants.INCIDENT_TABLE).using(SADisplayConstants.USERSESSION_ID)
+				 .where().equals(SADisplayConstants.WORKSPACE_ID)
+				 .and().equals(SADisplayConstants.ACTIVE);
+				 
+    	MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.WORKSPACE_ID, workspaceId)
+    		.addValue(SADisplayConstants.ACTIVE, true);
+		
+		return template.queryForList(queryModel.toString(), map);
+    }
+    
     public int getIncidentId(String name){
     	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
     			.selectFromTableWhere(SADisplayConstants.INCIDENT_ID)
@@ -340,6 +383,92 @@ public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 	    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId), handler);
     	return handler.getResults();
     }
+    
+    /** getIncidents - return all active incidents
+   	 *  @return List<Incident> 
+   	 */
+    public List<Map<String, Object>> getActiveIncidents(int workspaceId, int orgId, boolean active) {
+    	
+    	StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.INCIDENT_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.INCIDENT_ID);
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
+    			.selectFromTable(fields.toString())
+    			.join(SADisplayConstants.USER_SESSION_TABLE).using(SADisplayConstants.USERSESSION_ID)
+    			.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ORG_ID)
+    			.where().equals(SADisplayConstants.ACTIVE)
+    			.and().equals(SADisplayConstants.WORKSPACE_ID)
+    			.and().equals(SADisplayConstants.ORG_ID)
+    			.orderBy(SADisplayConstants.INCIDENT_CREATED).desc();
+    	try{
+    		return template.queryForList(queryModel.toString(), 
+		         new MapSqlParameterSource(SADisplayConstants.ACTIVE, active)
+		    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId)
+		    	 .addValue(SADisplayConstants.ORG_ID, orgId));
+    	}catch(Exception e){
+    		return null;
+    	}
+    }
+    
+    public boolean setIncidentActive(int incidentId, boolean active){
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
+				.update().equals(SADisplayConstants.ACTIVE)
+				.where().equals(SADisplayConstants.INCIDENT_ID);
+
+		MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.INCIDENT_ID, incidentId);
+		map.addValue(SADisplayConstants.ACTIVE, active);
+		
+		return (this.template.update(queryModel.toString(), map) == 1);
+    }
+    
+    public List<Map<String, Object>> findArchivedIncidentsByPrefix(int workspaceId, String prefix){
+    	StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.INCIDENT_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.INCIDENT_ID);
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
+				.selectFromTable(fields.toString())
+				.join(SADisplayConstants.USER_SESSION_TABLE).using(SADisplayConstants.USERSESSION_ID)
+				.join(SADisplayConstants.USER_ORG_TABLE).using(SADisplayConstants.USER_ORG_ID)
+				.join(SADisplayConstants.ORG_TABLE).using(SADisplayConstants.ORG_ID)
+				.where().equals(SADisplayConstants.PREFIX)
+				.and().equals(SADisplayConstants.ACTIVE)
+				.and().equals(SADisplayConstants.WORKSPACE_ID);
+    	
+    	try{
+    		return template.queryForList(queryModel.toString(), 
+		         new MapSqlParameterSource(SADisplayConstants.ACTIVE, false)
+		    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId)
+		    	 .addValue(SADisplayConstants.PREFIX, prefix));
+    	}catch(Exception e){
+    		return null;
+    	}
+    }
+    
+    public List<Map<String, Object>> findArchivedIncidentsByName(int workspaceId, String name){
+    	StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.INCIDENT_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.INCIDENT_ID);
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.INCIDENT_TABLE)
+				.selectFromTable(fields.toString())
+				.where().ilike(SADisplayConstants.INCIDENT_NAME).value("'%" + name + "%'")
+				.and().equals(SADisplayConstants.ACTIVE)
+				.and().equals(SADisplayConstants.WORKSPACE_ID);
+    	
+    	try{
+    		return template.queryForList(queryModel.toString(), 
+		         new MapSqlParameterSource(SADisplayConstants.ACTIVE, false)
+		    	 .addValue(SADisplayConstants.WORKSPACE_ID, workspaceId)
+		    	 .addValue(SADisplayConstants.INCIDENT_NAME, name));
+    	}catch(Exception e){
+    		return null;
+    	}
+	}
     
     /** getIncidentsAndChildren - return all active incidents and there children
    	 *  @return List<Incident> 

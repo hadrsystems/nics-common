@@ -32,6 +32,7 @@ package edu.mit.ll.nics.nicsdao.impl;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
+import edu.mit.ll.dao.QueryBuilder;
 import edu.mit.ll.dao.QueryModel;
 import edu.mit.ll.jdbc.JoinRowCallbackHandler;
 import edu.mit.ll.jdbc.JoinRowMapper;
@@ -48,6 +50,7 @@ import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
 import edu.mit.ll.nics.common.entity.datalayer.Datalayersource;
 import edu.mit.ll.nics.common.entity.datalayer.Datasource;
 import edu.mit.ll.nics.common.entity.datalayer.Datasourcetype;
+import edu.mit.ll.nics.common.entity.datalayer.Folder;
 import edu.mit.ll.nics.nicsdao.DatalayerDAO;
 import edu.mit.ll.nics.nicsdao.GenericDAO;
 import edu.mit.ll.nics.nicsdao.QueryManager;
@@ -270,6 +273,11 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 		map.addValue(SADisplayConstants.DATASOURCE_TYPE_ID, source.getDatasourcetypeid());
 		map.addValue(SADisplayConstants.DISPLAY_NAME, source.getDisplayname());
 		map.addValue(SADisplayConstants.EXTERNAL_URL, source.getExternalurl());
+		
+		if(source.getUsername() != null && source.getPassword() != null){
+			map.addValue(SADisplayConstants.USER_NAME, source.getUsername());
+			map.addValue(SADisplayConstants.PASSWORD, source.getPassword());
+		}
 			
 		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATASOURCE_TABLE)
 			.insertInto(new ArrayList(map.getValues().keySet()))
@@ -316,6 +324,76 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 				.returnValue(SADisplayConstants.DATALAYER_ID);
 			
 		return this.template.queryForObject(queryModel.toString(), map, String.class);
+	}
+	
+	public List<Map<String, Object>> getAuthentication(String datasourceid) {
+   		StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.USER_NAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.PASSWORD);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.INTERNAL_URL);
+   		
+       	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATASOURCE_TABLE)
+   				.selectFromTable(fields.toString())
+   				.where().equals(SADisplayConstants.DATASOURCE_ID);
+   		
+   		return template.queryForList(queryModel.toString(), 
+				new MapSqlParameterSource(SADisplayConstants.DATASOURCE_ID, datasourceid));
+   	}
+	
+	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public boolean removeDataLayer(String dataSourceId) {
+	
+		int removed = -1;
+		
+		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_FOLDER_TABLE)
+				.deleteFromTableWhere().equals(SADisplayConstants.DATALAYER_ID);
+		
+		removed = this.template.update(queryModel.toString(), new MapSqlParameterSource(SADisplayConstants.DATALAYER_ID,dataSourceId));
+		
+		if(removed != 1){
+			return false;
+		}
+		
+		queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_TABLE)
+				.deleteFromTableWhere().equals(SADisplayConstants.DATALAYER_ID);
+		
+		removed = this.template.update(queryModel.toString(), new MapSqlParameterSource(SADisplayConstants.DATALAYER_ID,dataSourceId));
+		
+		if(removed != 1){
+			return false;
+		}
+		
+		return true;
+	}
+	
+	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public Datalayer updateDataLayer(Datalayer datalayer) {
+
+		try{
+		
+			QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_TABLE)
+					.update().equals(SADisplayConstants.DISPLAY_NAME).where()
+					.equals(SADisplayConstants.DATALAYER_ID).returnValue("*");
+	
+			MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.DATALAYER_ID,datalayer.getDatalayerid());
+			map.addValue(SADisplayConstants.DISPLAY_NAME, datalayer.getDisplayname());
+		
+			JoinRowCallbackHandler<Datalayer> handler = getHandlerWith();
+			
+			this.template.query(queryModel.toString(), map, handler);
+			
+			return handler.getSingleResult();
+		
+		}
+		catch(Exception e){
+			log.info("Failed to update datalayer #0", datalayer.getDisplayname());
+		}
+		
+		return null;
 	}
 	
 	@Override

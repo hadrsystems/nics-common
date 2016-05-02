@@ -277,15 +277,14 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
      * @param featureIds
      * @return
      */
-    public List<Feature> getFeatures(List<String> featureIds) {
+    public List<Feature> getFeatures(List<Long> featureIds) {
     	List<Feature> features = new ArrayList<Feature>();
     	
-    	QueryModel model = QueryManager.createQuery(SADisplayConstants.FEATURES)
+    	QueryModel model = QueryManager.createQuery(SADisplayConstants.FEATURE_TABLE)
     			.selectAllFromTable()
     			.left().join(SADisplayConstants.DOCUMENT_FEATURE_TABLE).using(SADisplayConstants.FEATURE_ID)
     			.left().join(SADisplayConstants.DOCUMENT_TABLE).using(SADisplayConstants.DOCUMENT_ID)
-    			.where()
-    			.inAsString(SADisplayConstants.FEATURE_ID, featureIds);
+    			.where().inAsLong(SADisplayConstants.FEATURE_ID, featureIds);
     	
     	JoinRowCallbackHandler<Feature> handler = getHandlerWith(new DocumentRowMapper());
     	
@@ -356,6 +355,49 @@ public class FeatureDAOImpl extends GenericDAO implements FeatureDAO {
     	return handler.getResults();
     }
 
+    /**
+     * Copy all of the specified user's userfeatures to a given collabroom
+     * 
+     * We duplicate all the user's features and add a collabroom feature for each.
+     * 
+     * @param userId The id of the user whose userfeatures to copy 
+     * @param collabRoomId The id of the collabroom to copy to 
+     */
+    @Override
+	public List<Long> copyFeatures( int userId, int collabRoomId){
+    	//dynamically get the list of columns to avoid hard-coding them all
+    	QueryModel selectColumnsQuery = QueryManager.createQuery("information_schema.columns")
+    			.selectFromTable("column_name")
+    			.where().equals("table_name", SADisplayConstants.FEATURE_TABLE)
+    			.and().notEqual("column_name", SADisplayConstants.FEATURE_ID.toLowerCase());
+    	
+    	List<String> columns = this.template.queryForList(selectColumnsQuery.toString(),
+    			selectColumnsQuery.getParameters(), String.class);
+    	
+    	final String ALIAS = "copiedfeatures"; 
+    	
+    	QueryModel selectFeaturesQuery = QueryManager.createQuery(SADisplayConstants.FEATURE_TABLE)
+    		.selectFromTable(columns)
+    		.join(SADisplayConstants.USER_FEATURE_TABLE).using(SADisplayConstants.FEATURE_ID)
+    		.where().equals(SADisplayConstants.USER_ID, userId)
+    		.and().equals(SADisplayConstants.DELETED, false);
+	
+    	QueryModel insertFeaturesStatement = QueryManager.createQuery(SADisplayConstants.FEATURE_TABLE)
+    		.insertInto(columns, selectFeaturesQuery)
+    		.returnValue(SADisplayConstants.FEATURE_ID);
+    	
+    	QueryModel selectCopiedQuery = QueryManager.createQuery(ALIAS)
+    			.selectFromTable(Integer.toString(collabRoomId), SADisplayConstants.FEATURE_ID);
+    	
+    	QueryModel insertCollabFeaturesStatement = QueryManager.createQuery(SADisplayConstants.COLLABROOM_FEATURE_TABLE)
+    		.with(ALIAS, insertFeaturesStatement)
+    		.insertInto(Arrays.asList(SADisplayConstants.COLLAB_ROOM_ID, SADisplayConstants.FEATURE_ID), selectCopiedQuery)
+    		.returnValue(SADisplayConstants.FEATURE_ID);
+	
+    	return this.template.queryForList(insertCollabFeaturesStatement.toString(),
+    		insertCollabFeaturesStatement.getParameters(), Long.class);
+    }
+    
     /**
      * Share all of the specified user's userfeatures to a given collabroom
      * 

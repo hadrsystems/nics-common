@@ -48,8 +48,10 @@ public class LogRowMapper extends JoinRowMapper<Log> {
         log.setLogid(rs.getInt("logid"));
         log.setLogtypeid(rs.getInt("logtypeid"));
         log.setMessage(rs.getString("message"));
-        log.setStatus(rs.getInt("status"));
+        log.setCreated(rs.getDate("created"));
+         log.setStatus(rs.getInt("status"));
         log.setUsersessionid(rs.getInt("usersessionid"));
+        log.setWorkspaceId(rs.getInt("workspaceid"));
         return log;
     }
     

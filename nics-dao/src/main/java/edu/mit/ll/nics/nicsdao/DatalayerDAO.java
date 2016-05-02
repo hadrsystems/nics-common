@@ -30,6 +30,7 @@
 package edu.mit.ll.nics.nicsdao;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.mit.ll.nics.common.entity.datalayer.Datalayer;
 import edu.mit.ll.nics.common.entity.datalayer.Datalayerfolder;
@@ -49,10 +50,13 @@ public interface DatalayerDAO extends BaseDAO {
 	public int getNextDatalayerFolderId();
 	public String insertDataSource(Datasource source);
 	public String insertDataLayer(String dataSourceId, Datalayer datalayer);
+	public boolean removeDataLayer(String dataSourceId);
+	public Datalayer updateDataLayer(Datalayer datalayer);
 	public int insertDataLayerFolder(String folderId, String datalayerId, int folderIndex);
 	public Datasource getDatasource(String datasourceId);
 	public Datalayerfolder updateDatalayerfolder(Datalayerfolder dlFolder);
 	public void decrementIndexes(String parentFolderId, int index);
 	public void incrementIndexes(String parentFolderId, int index);
 	public int getNextDatalayerFolderIndex(String folderid);
+	public List<Map<String, Object>> getAuthentication(String datasourceid);
 }

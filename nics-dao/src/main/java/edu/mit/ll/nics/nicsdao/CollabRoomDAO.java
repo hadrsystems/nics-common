@@ -43,8 +43,8 @@ public interface CollabRoomDAO extends BaseDAO {
 	public boolean hasRoomNamed(int incidentId, String collabRoomName);
 	public boolean hasRoomNamed(String text);
 	public List<CollabRoom> updateCollabrooms(String currentIncident, int currentIncidentId);
+	public boolean hasPermissions(long userid, long collabroomid, String incidentMap);
 	public boolean hasPermissions(long userid, long collabroomid);
-	public boolean hasPermissions(long userid, long collabroomid, boolean includeIncidentMap);
 	public int create(CollabRoom collabroom);
 	public int getCollabRoomId(String name);
 	public int getCollabRoomId(String name, int workspaceId);
