@@ -69,6 +69,7 @@ public final class QueryBuilder{
 	public static String OFFSET = " offset ";
 	public static String ORDER_BY = " order by ";
 	public static String IS_NULL = " is null";
+	public static String IS_NOT_NULL = " is not null";
 	public static String DISTINCT = "distinct";
 	public static String IN = " in";
 	public static String MAX = " max";
@@ -159,6 +160,10 @@ public final class QueryBuilder{
 	
 	public static String isNull(String field){
 		return SPACE + field + IS_NULL;
+	}
+	
+	public static String isNotNull(String field){
+		return SPACE + field + IS_NOT_NULL;
 	}
 	
 	public static String limit(String value){

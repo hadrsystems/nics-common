@@ -274,7 +274,7 @@ private static Logger log;
 	
 	public boolean isSecure(long collabroomId){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
-				.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
+				.selectDistinctFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
 				.equals(SADisplayConstants.COLLAB_ROOM_ID);
 		try{
 			this.template.queryForObject(query.toString(), 
@@ -297,7 +297,7 @@ private static Logger log;
 		
 		if(this.isSecure(collabroomId)){
 			QueryModel query = QueryManager.createQuery(SADisplayConstants.COLLAB_ROOM_PERMISSION_TABLE)
-					.selectFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
+					.selectDistinctFromTableWhere(SADisplayConstants.COLLAB_ROOM_ID)
 					.equals(SADisplayConstants.COLLAB_ROOM_ID)
 					.and().equals(SADisplayConstants.USER_ID);
 			try{

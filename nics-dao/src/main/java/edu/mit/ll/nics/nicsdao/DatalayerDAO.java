@@ -59,4 +59,5 @@ public interface DatalayerDAO extends BaseDAO {
 	public void incrementIndexes(String parentFolderId, int index);
 	public int getNextDatalayerFolderIndex(String folderid);
 	public List<Map<String, Object>> getAuthentication(String datasourceid);
+	public List<Map<String,Object>> getTrackingLayers(int workspaceId, boolean secured);
 }

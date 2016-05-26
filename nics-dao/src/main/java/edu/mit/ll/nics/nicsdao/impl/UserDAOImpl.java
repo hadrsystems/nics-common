@@ -517,22 +517,15 @@ public class UserDAOImpl extends GenericDAO implements UserDAO {
 		QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.USER_ESCAPED)
 				.selectAllFromTable()
 				.join(SADisplayConstants.CURRENT_USERSESSION_TABLE).using(SADisplayConstants.USER_ID)
-				.left().join(SADisplayConstants.CONTACT_TABLE).using(SADisplayConstants.USER_ID)
 				.where().equals(SADisplayConstants.USERSESSION_ID);
 		
-		System.out.println("here1");
-		
-		JoinRowCallbackHandler<User> handler = getHandlerWith(
-				new UserOrgRowMapper().attachAdditionalMapper(new OrgRowMapper()),
-				new ContactRowMapper().attachAdditionalMapper(new ContactTypeRowMapper()));
+		JoinRowCallbackHandler<User> handler = getHandlerWith();
         
 		this.template.query(queryModel.toString(), 
             new MapSqlParameterSource(SADisplayConstants.USERSESSION_ID, userSessionId), 
             handler);
 		
-		
-        
-        try{
+		try{
         	return handler.getSingleResult();
         }catch(Exception e){
         	log.info("No user was found with userid " + userSessionId);
