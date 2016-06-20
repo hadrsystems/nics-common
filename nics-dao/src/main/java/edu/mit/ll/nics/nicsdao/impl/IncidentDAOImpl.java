@@ -632,12 +632,19 @@ public class IncidentDAOImpl extends GenericDAO implements IncidentDAO {
 				.join(SADisplayConstants.INCIDENT_TABLE).using(SADisplayConstants.INCIDENT_ID)
 				.where().equals(SADisplayConstants.INCIDENT_ID)
 				.and().equals(SADisplayConstants.COLLABROOM_AND_NAME)
-				.and().equals(SADisplayConstants.CONTACT_TYPE_ID);
+				.and().equals(SADisplayConstants.CONTACT_TYPE_ID)
+				.and().equals(SADisplayConstants.SYSTEM_ROLE_ID);
 		
-		return this.template.queryForList(queryModel.toString(), 
-				new MapSqlParameterSource(SADisplayConstants.INCIDENT_ID, incidentid)
-				.addValue(SADisplayConstants.COLLABROOM_AND_NAME, roomname)
-				.addValue(SADisplayConstants.CONTACT_TYPE_ID, SADisplayConstants.EMAIL_TYPE_ID));
+		try{
+			return this.template.queryForList(queryModel.toString(), 
+					new MapSqlParameterSource(SADisplayConstants.INCIDENT_ID, incidentid)
+					.addValue(SADisplayConstants.COLLABROOM_AND_NAME, roomname)
+					.addValue(SADisplayConstants.CONTACT_TYPE_ID, SADisplayConstants.EMAIL_TYPE_ID)
+					.addValue(SADisplayConstants.SYSTEM_ROLE_ID, SADisplayConstants.ADMIN_ROLE_ID));
+		}catch(Exception e){
+			log.info("Error retrieving incident map admins: " + e.getMessage());
+			return null;
+		}
 	}
 	
 	public int setIncidentCenter(String incidentname){

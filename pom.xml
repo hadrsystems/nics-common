@@ -38,7 +38,7 @@
 	<!-- Maven artifact details -->
 	<groupId>edu.mit.ll.nics.common</groupId>
 	<artifactId>master-pom</artifactId>
-	<version>6.2</version>
+	<version>6.3</version>
 	<packaging>pom</packaging>
 
 	<!-- Project information -->

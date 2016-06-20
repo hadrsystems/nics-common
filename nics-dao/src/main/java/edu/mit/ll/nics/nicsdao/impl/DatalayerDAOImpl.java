@@ -135,6 +135,45 @@ public class DatalayerDAOImpl extends GenericDAO implements DatalayerDAO {
 		return handler.getSingleResult();
 	}
 	
+	public List<Map<String,Object>> getTrackingLayers(int workspaceId, boolean secured){
+		//select displayname,layername from datalayer join datalayersource using(datalayersourceid) join datalayerfolder using(datalayerid) where folderid=(select folderid from rootfolder where tabname='Tracking' and workspaceid=1);
+		StringBuffer fields = new StringBuffer();
+    	fields.append(SADisplayConstants.DATALAYER_DISPLAYNAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.LAYERNAME);
+    	fields.append(QueryBuilder.COMMA);
+    	fields.append(SADisplayConstants.INTERNAL_URL);
+    	
+    	if(secured){
+    		fields.append(QueryBuilder.COMMA);
+    		fields.append(SADisplayConstants.DATASOURCE_ID);
+    	}
+    	
+    	QueryModel folderQueryModel = QueryManager.createQuery(SADisplayConstants.ROOT_FOLDER_TABLE)
+    			.selectFromTable(SADisplayConstants.FOLDER_ID)
+    			.where().equals(SADisplayConstants.TABNAME)
+    			.and().equals(SADisplayConstants.WORKSPACE_ID);
+    	
+    	QueryModel queryModel = QueryManager.createQuery(SADisplayConstants.DATALAYER_TABLE)
+   			 	 .selectFromTable(fields.toString())
+				 .join(SADisplayConstants.DATALAYER_SOURCE_TABLE).using(SADisplayConstants.DATALAYER_SOURCE_ID)
+				 .join(SADisplayConstants.DATALAYER_FOLDER_TABLE).using(SADisplayConstants.DATALAYER_ID)
+				 .join(SADisplayConstants.DATASOURCE_TABLE).using(SADisplayConstants.DATASOURCE_ID)
+    			 .where().equalsInnerSelect(SADisplayConstants.FOLDER_ID, folderQueryModel.toString());
+				 
+    	//return the datasourceid if there is a username associated with the datasource
+    	if(secured){
+    		queryModel = queryModel.and().isNotNull(SADisplayConstants.USER_NAME);
+    	}else{
+    		queryModel = queryModel.and().isNull(SADisplayConstants.USER_NAME);
+    	}
+				 
+    	MapSqlParameterSource map = new MapSqlParameterSource(SADisplayConstants.WORKSPACE_ID, workspaceId)
+    		.addValue(SADisplayConstants.TABNAME, SADisplayConstants.TRACKING);
+		
+		return template.queryForList(queryModel.toString(), map);
+	}
+	
 	public List<Datasource> getDatasources(String type){
 		QueryModel query = QueryManager.createQuery(SADisplayConstants.DATASOURCE_TABLE)
 		.selectAllFromTable()

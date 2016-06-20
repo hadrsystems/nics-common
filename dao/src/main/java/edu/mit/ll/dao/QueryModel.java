@@ -472,6 +472,11 @@ public class QueryModel{
 		return this;
 	}
 	
+	public QueryModel isNotNull(String field){
+		query.append(QueryBuilder.isNotNull(field));
+		return this;
+	}
+	
 	public QueryModel limit(String value){
 		query.append(QueryBuilder.limit(value));
 		return this;

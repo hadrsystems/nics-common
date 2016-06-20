@@ -345,4 +345,6 @@ public final class SADisplayConstants {
 	public static final String INCIDENT_MAP = "Incident Map";
 	public static final String PASSWORD = "password";
 	public static final String INCIDENT_CREATED = "incident.created";
+	public static final Object TRACKING = "Tracking";
+	public static final Object DATALAYER_DISPLAYNAME = "datalayer.displayname";
 }

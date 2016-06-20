@@ -116,6 +116,7 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
 				.and().equals(SADisplayConstants.ACTIVE)
 				.and().equals(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED)
 				.and().equals(SADisplayConstants.USER_ENABLED, SADisplayConstants.USER_ENABLED_PARAM, null)
+				.and().equals(SADisplayConstants.WORKSPACE_ID)
 				.and().open().equals(SADisplayConstants.SYSTEM_ROLE_ID, ADMIN_ID, null) //open = (
 				.or().equals(SADisplayConstants.SYSTEM_ROLE_ID, SUPER_ID, null)
 				.close(); //close = )
@@ -127,6 +128,7 @@ public class OrgDAOImpl extends GenericDAO implements OrgDAO {
         params.put(SADisplayConstants.USER_ORG_WORKSPACE_ENABLED, true);
         params.put(SADisplayConstants.ACTIVE, true);
         params.put(SADisplayConstants.USER_ENABLED_PARAM, true);
+        params.put(SADisplayConstants.WORKSPACE_ID, workspaceId);
 		
 		return this.template.queryForList(queryModel.toString(), params, Integer.class);
 	}

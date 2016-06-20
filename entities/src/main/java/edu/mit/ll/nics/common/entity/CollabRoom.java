@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -89,6 +91,9 @@ public class CollabRoom extends SADisplayMessageEntity implements SADisplayPersi
     
     @Transient
     private Collection<Integer> readWriteUsers = new ArrayList<Integer>();
+    
+    @Transient 
+    private List<Map<String,Object>> incidentMapAdmins = new ArrayList<Map<String,Object>>();
     
 
     public CollabRoom() {
@@ -212,6 +217,15 @@ public class CollabRoom extends SADisplayMessageEntity implements SADisplayPersi
     	this.readWriteUsers = readWriteUsers;
     }
     
+    @Transient
+    public List<Map<String,Object>> getIncidentMapAdmins(){
+    	return this.incidentMapAdmins;
+    }
+    
+    @Transient
+    public void setIncidentMapAdmins(List<Map<String,Object>> admins){
+    	this.incidentMapAdmins = admins;
+    }
     
     @Override
     public JSONObject toJSONObject() throws JSONException {
